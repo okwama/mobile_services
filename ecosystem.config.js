@@ -3,7 +3,7 @@ module.exports = {
   apps: [
     {
       name: 'api-gateway',
-      script: 'dist/apps/api-gateway/main',
+      script: 'dist/apps/api-gateway/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -16,7 +16,7 @@ module.exports = {
     },
     {
       name: 'user-service',
-      script: 'dist/apps/user-service/main',
+      script: 'dist/apps/user-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -25,7 +25,7 @@ module.exports = {
     },
     {
       name: 'charter-service',
-      script: 'dist/apps/charter-service/main',
+      script: 'dist/apps/charter-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -34,7 +34,7 @@ module.exports = {
     },
     {
       name: 'direct-charter-service',
-      script: 'dist/apps/direct-charter-service/main',
+      script: 'dist/apps/direct-charter-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -43,7 +43,7 @@ module.exports = {
     },
     {
       name: 'yacht-service',
-      script: 'dist/apps/yacht-service/main',
+      script: 'dist/apps/yacht-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -52,7 +52,7 @@ module.exports = {
     },
     {
       name: 'experience-service',
-      script: 'dist/apps/experience-service/main',
+      script: 'dist/apps/experience-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -61,7 +61,7 @@ module.exports = {
     },
     {
       name: 'booking-service',
-      script: 'dist/apps/booking-service/main',
+      script: 'dist/apps/booking-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -70,7 +70,7 @@ module.exports = {
     },
     {
       name: 'payment-service',
-      script: 'dist/apps/payment-service/main',
+      script: 'dist/apps/payment-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -79,7 +79,7 @@ module.exports = {
     },
     {
       name: 'communication-service',
-      script: 'dist/apps/communication-service/main',
+      script: 'dist/apps/communication-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'mobile-services',
@@ -88,7 +88,7 @@ module.exports = {
     },
     {
       name: 'location-service',
-      script: 'dist/apps/location-service/main',
+      script: 'dist/apps/location-service/main.js',
       exec_mode: 'fork',
       instances: 1,
       namespace: 'aircharters',
