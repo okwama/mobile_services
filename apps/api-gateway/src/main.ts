@@ -7,7 +7,7 @@ import { REDIS_CONFIG } from '@app/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as morgan from 'morgan';
-import os from 'os';
+import * as os from 'os';
 
 function registerProcessHandlers() {
   process.on('unhandledRejection', (reason) => {
