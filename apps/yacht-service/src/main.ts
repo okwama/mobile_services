@@ -1,4 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+if (!(globalThis as any).crypto) {
+  try { (globalThis as any).crypto = require('crypto'); } catch (e) {}
+}
 import { MicroserviceOptions } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
 import { YachtServiceModule } from './yacht-service.module';

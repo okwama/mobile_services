@@ -1,4 +1,7 @@
 import { NestFactory } from '@nestjs/core';
+if (!(globalThis as any).crypto) {
+  try { (globalThis as any).crypto = require('crypto'); } catch (e) {}
+}
 import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import { DirectCharterServiceModule } from './direct-charter-service.module';
 

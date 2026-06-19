@@ -1,4 +1,8 @@
 import { NestFactory } from '@nestjs/core';
+// Ensure Node's crypto is available when code is bundled (webpack) or run in environments
+if (!(globalThis as any).crypto) {
+  try { (globalThis as any).crypto = require('crypto'); } catch (e) {}
+}
 import { MicroserviceOptions } from '@nestjs/microservices';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
