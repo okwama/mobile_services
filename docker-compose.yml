@@ -1,0 +1,207 @@
+version: '3.8'
+
+services:
+  # Redis Message Broker
+  redis:
+    image: redis:7-alpine
+    container_name: air-charters-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - air-charters-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MySQL Database (Shared initially)
+  mysql:
+    image: mysql:8
+    container_name: air-charters-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: air_charters
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - air-charters-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: api-gateway
+    container_name: air-charters-gateway
+    ports:
+      - "5008:5008"
+    depends_on:
+      - redis
+      - user-service
+      - charter-service
+    environment:
+      - NODE_ENV=development
+      - API_GATEWAY_PORT=5008
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - air-charters-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # User Service
+  user-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: user-service
+    container_name: air-charters-user-service
+    ports:
+      - "3001:3001"
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - NODE_ENV=development
+      - USER_SERVICE_PORT=3001
+      - REDIS_HOST=redis
+      - DB_HOST=mysql
+    networks:
+      - air-charters-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Charter Service
+  charter-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: charter-service
+    container_name: air-charters-charter-service
+    ports:
+      - "3004:3004"
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - NODE_ENV=development
+      - CHARTER_SERVICE_PORT=3004
+      - REDIS_HOST=redis
+      - DB_HOST=mysql
+    networks:
+      - air-charters-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Booking Service
+  booking-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: booking-service
+    container_name: air-charters-booking-service
+    ports:
+      - "3002:3002"
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - NODE_ENV=development
+      - BOOKING_SERVICE_PORT=3002
+      - REDIS_HOST=redis
+      - DB_HOST=mysql
+    networks:
+      - air-charters-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Payment Service
+  payment-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: payment-service
+    container_name: air-charters-payment-service
+    ports:
+      - "3003:3003"
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - NODE_ENV=development
+      - PAYMENT_SERVICE_PORT=3003
+      - REDIS_HOST=redis
+      - DB_HOST=mysql
+    networks:
+      - air-charters-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Communication Service
+  communication-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: communication-service
+    container_name: air-charters-communication-service
+    ports:
+      - "3005:3005"
+    depends_on:
+      - redis
+    environment:
+      - NODE_ENV=development
+      - COMMUNICATION_SERVICE_PORT=3005
+      - REDIS_HOST=redis
+    networks:
+      - air-charters-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+  # Location Service
+  location-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: location-service
+    container_name: air-charters-location-service
+    ports:
+      - "3006:3006"
+    depends_on:
+      - redis
+      - mysql
+    environment:
+      - NODE_ENV=development
+      - LOCATION_SERVICE_PORT=3006
+      - REDIS_HOST=redis
+      - DB_HOST=mysql
+    networks:
+      - air-charters-network
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+
+networks:
+  air-charters-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+  mysql_data:
+
