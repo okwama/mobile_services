@@ -2,84 +2,50 @@
 
 This repository contains the Air Charters backend implemented as a NestJS monorepo. It houses multiple microservices, shared libraries, database migrations, and local tooling used for development and deployment.
 
-**Status (local repo):** Active development — multiple services present and runnable via npm scripts, `start-services.sh`, or `docker-compose.yml`.
+Status: Active development — services runnable via `npm` scripts or PM2 in production.
 
-## Quick Links
-- **Project root:** [README.md](README.md)
-- **Migration plan:** [MICROSERVICES_MIGRATION_PLAN.md](MICROSERVICES_MIGRATION_PLAN.md)
-- **Local compose:** [docker-compose.yml](docker-compose.yml)
-- **Start/stop scripts:** [start-services.sh](start-services.sh), [stop-services.sh](stop-services.sh)
+## Where to find documentation
+- All project documentation has been consolidated under the `docs/` folder and grouped by topic (architecture, deployment, monitoring, security, integration, tests, planning).
+- Key docs:
+	- Architecture: [docs/architecture](docs/architecture)
+	- Deployment & guides: [docs/deploy](docs/deploy)
+	- Monitoring: [docs/monitoring](docs/monitoring)
+	- Security: [docs/security](docs/security)
+	- Integration & testing: [docs/integration](docs/integration)
+	- Tests & troubleshooting: [docs/tests](docs/tests)
+	- Migration & planning: [docs/planning](docs/planning)
 
-## What’s in this repo
-- `apps/` — All NestJS services (api-gateway, user-service, charter-service, booking-service, payment-service, communication-service, location-service, direct-charter-service, experience-service, yacht-service).
-- `libs/` — Shared code (common utilities, database helpers, DTOs).
-- `migrations/` — SQL migration scripts used by the project.
-- `docker-compose.yml` — Compose for local development.
-- `package.json` — Monorepo scripts (start:all, build:all, start:<service>, etc.).
-
-## Services (short)
-- `api-gateway` — HTTP entry point and request routing
-- `user-service` — Authentication, users, passengers, wallet
-- `charter-service` — Charter deals, aircraft, amenities
-- `booking-service` — Booking lifecycle, inquiries, trips
-- `payment-service` — Payment integrations and ledger
-- `communication-service` — Email/SMS/notifications
-- `location-service` — Locations and mapping
-- `direct-charter-service`, `experience-service`, `yacht-service` — additional domain services
-
-## Prerequisites
-- Node.js 18+ (as used by the codebase)
-- MySQL 8+ (or compatible database)
-- Redis (for microservices transport / cache)
-- Docker & Docker Compose (optional, recommended for local full-stack)
-
-## Install
-Run from the repo root:
+## Quick start
+1) Install dependencies
 
 ```bash
 npm install
 ```
 
-Copy and edit environment files for services you run (examples may exist as `.env.example` in service folders).
+2) Copy `.env.example` to `.env` and edit values as needed
 
-## Run (local)
-
-1) Run individual services (recommended during development):
+3) Build and run (development)
 
 ```bash
-# Example: start the charter service
-npm run start:charter-service
-
-# Start the API gateway
-npm run start:api-gateway
+npm run build:all
+npm start
 ```
 
-2) Start all services together (uses `concurrently`):
+4) Production with PM2 (example)
 
 ```bash
-npm run start:all
+# set any port overrides, e.g. export USER_SERVICE_PORT=3101
+pm2 start ecosystem.config.js --env production
+pm2 save
 ```
 
-3) Use Docker Compose for a local full-stack environment:
+## Health & monitoring
+- API Gateway exposes health endpoints: `/api/health` and `/api/health/all` and an HTML dashboard at `/api/health/dashboard`.
+- Uptime Kuma can be installed and run (see [docs/monitoring/UPTIME_KUMA_LOCAL_SETUP.md](docs/monitoring/UPTIME_KUMA_LOCAL_SETUP.md)).
 
-```bash
-docker-compose up --build
-```
-
-There are helper scripts at the repository root: `start-services.sh` and `stop-services.sh`.
-
-## Build & Test
-
+## Build & test
 - Build all services: `npm run build:all`
-- Run tests: `npm run test` (per-service test configs exist under `apps/<service>/test` sometimes)
-
-## Migrations & DB
-
-SQL migration files are in `migrations/` and service-specific migration files are under `apps/*/migrations` or `location-service/migrations`.
-
-## Notes & Known Items
-- The repo is a work-in-progress: some docs reference migration plans and API references located elsewhere in project documentation — check `MICROSERVICES_MIGRATION_PLAN.md` and other top-level docs.
-- Use the `package.json` scripts (`start:all`, `start:<service>`, `build:all`) for consistent local runs.
+- Run tests: `npm run test`
 
 ## Contributing
 1. Create a feature branch

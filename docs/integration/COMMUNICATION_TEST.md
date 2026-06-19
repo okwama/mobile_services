@@ -96,4 +96,3 @@ MAILTRAP_API_KEY=e1b244e980155f5ae701854c145f8c9d
 ---
 
 **Ready to test!** Run the curl commands above. 🚀
-

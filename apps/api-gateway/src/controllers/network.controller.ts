@@ -20,7 +20,8 @@ export class NetworkController {
       const last = allLines.slice(-n);
       return res.json({ lines: last, totalLines: allLines.length });
     } catch (err) {
-      return res.status(500).json({ error: 'failed to read log', detail: err.message });
+      const msg = (err as any)?.message || String(err);
+      return res.status(500).json({ error: 'failed to read log', detail: msg });
     }
   }
 }
