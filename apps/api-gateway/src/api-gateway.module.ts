@@ -21,6 +21,7 @@ import { ExperiencesController } from './controllers/experiences.controller';
 import { PaymentsController } from './controllers/payments.controller';
 import { DirectCharterController } from './controllers/direct-charter.controller';
 import { HealthController } from './controllers/health.controller';
+import { NetworkController } from './controllers/network.controller';
 import { TripsController } from './controllers/trips.controller';
 import { NotificationsController } from './controllers/notifications.controller';
 import { DevicesController } from './controllers/devices.controller';
@@ -88,6 +89,7 @@ import { NotificationsGateway } from './gateways/notifications.gateway';
   ],
   controllers: [
     HealthController,
+    NetworkController,
     AuthController,
     UsersController,
     CharterDealsController,

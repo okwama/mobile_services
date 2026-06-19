@@ -11,7 +11,8 @@ module.exports = {
       env_production: {
         NODE_ENV: 'production',
         REDIS_HOST: process.env.REDIS_HOST || '127.0.0.1',
-        REDIS_PORT: process.env.REDIS_PORT || 6379
+        REDIS_PORT: process.env.REDIS_PORT || 6379,
+        API_GATEWAY_PORT: process.env.API_GATEWAY_PORT || 5007
       }
     },
     {
@@ -91,7 +92,7 @@ module.exports = {
       script: 'dist/apps/location-service/main.js',
       exec_mode: 'fork',
       instances: 1,
-      namespace: 'aircharters',
+      namespace: 'mobile-services',
       autorestart: true,
       env_production: { NODE_ENV: 'production' }
     }
