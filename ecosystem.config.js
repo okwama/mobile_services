@@ -96,5 +96,15 @@ module.exports = {
       autorestart: true,
       env_production: { NODE_ENV: 'production' }
     }
+    ,
+    {
+      name: 'uptime-kuma',
+      script: '/opt/uptime-kuma/server/server.js',
+      exec_mode: 'fork',
+      instances: 1,
+      namespace: 'monitoring',
+      autorestart: true,
+      env_production: { NODE_ENV: 'production', PORT: 4000 }
+    }
   ]
 };
