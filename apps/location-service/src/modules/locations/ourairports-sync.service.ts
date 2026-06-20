@@ -1,11 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { Location } from './entities/location.entity';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import * as csvParser from 'csv-parser';
+import csvParser from 'csv-parser';
 import { Readable } from 'stream';
 
 @Injectable()
@@ -42,7 +43,7 @@ export class OurAirportsSyncService {
       
       this.logger.log(`✅ Daily sync complete!`, results);
     } catch (error) {
-      this.logger.error(`❌ Daily sync failed: ${error.message}`);
+      this.logger.error(`❌ Daily sync failed: ${getErrorMessage(error)}`);
     } finally {
       this.isSyncing = false;
     }
@@ -91,7 +92,7 @@ export class OurAirportsSyncService {
             resolve();
           })
           .on('error', (error) => {
-            this.logger.error(`❌ Error parsing CSV: ${error.message}`);
+            this.logger.error(`❌ Error parsing CSV: ${getErrorMessage(error)}`);
             reject(error);
           });
       });
@@ -115,7 +116,7 @@ export class OurAirportsSyncService {
             imported++;
           }
         } catch (error) {
-          this.logger.error(`❌ Failed to process ${airportRow.name}: ${error.message}`);
+          this.logger.error(`❌ Failed to process ${airportRow.name}: ${getErrorMessage(error)}`);
           failed++;
         }
       }
@@ -124,7 +125,7 @@ export class OurAirportsSyncService {
       
       return { imported, updated, failed };
     } catch (error) {
-      this.logger.error(`❌ OurAirports sync failed: ${error.message}`);
+      this.logger.error(`❌ OurAirports sync failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -245,8 +246,8 @@ export class OurAirportsSyncService {
         const result = await this.syncAirports(code);
         results.push({ country: code, ...result });
       } catch (error) {
-        this.logger.error(`Failed to sync ${code}: ${error.message}`);
-        results.push({ country: code, error: error.message });
+        this.logger.error(`Failed to sync ${code}: ${getErrorMessage(error)}`);
+        results.push({ country: code, error: getErrorMessage(error) });
       }
     }
 

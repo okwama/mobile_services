@@ -1,4 +1,5 @@
 import { Injectable, UnauthorizedException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -506,8 +507,7 @@ export class AuthService {
       await this.refreshTokenRepository.save(refreshToken);
       console.log(`✅ Refresh token stored for user ${userId}, expires at ${expiresAt}`);
     } catch (error) {
-      console.error('❌ Error storing refresh token:', error);
-      console.error('Error details:', error.message);
+      console.error('❌ Error storing refresh token:', getErrorMessage(error));
       // Don't throw error - token generation succeeded, storage is secondary
     }
   }

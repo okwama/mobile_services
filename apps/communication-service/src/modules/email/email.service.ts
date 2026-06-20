@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
@@ -194,7 +195,7 @@ export class EmailService {
         this.logger.log(`Email sent via Mailtrap to ${to}`);
         return { success: true, messageId: result.data?.message_id };
       } catch (error) {
-        this.logger.warn(`Mailtrap failed, trying Infobip: ${error.message}`);
+        this.logger.warn(`Mailtrap failed, trying Infobip: ${getErrorMessage(error)}`);
       }
     }
 
@@ -216,8 +217,9 @@ export class EmailService {
         this.logger.log(`Email sent via Infobip to ${to}`);
         return { success: true, messageId: result.data?.bulkId };
       } catch (error) {
-        this.logger.error(`Email failed: ${error.message}`);
-        return { success: false, error: error.message };
+        const msg = getErrorMessage(error);
+        this.logger.error(`Email failed: ${msg}`);
+        return { success: false, error: msg };
       }
     }
 

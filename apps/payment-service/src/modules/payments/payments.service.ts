@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException, Inject, Logger, UnauthorizedException } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -115,7 +116,7 @@ export class PaymentsService {
       };
 
     } catch (error) {
-      this.logger.error(`Payment initialization failed: ${error.message}`);
+      this.logger.error(`Payment initialization failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -165,8 +166,8 @@ export class PaymentsService {
               { id: parseInt(payment.bookingId), paymentStatus: 'paid' }
             ).toPromise();
             this.logger.log(`Updated payment status for booking ${payment.bookingId}`);
-          } catch (e) {
-            this.logger.warn(`Failed to update payment status for ${payment.bookingId}: ${e?.message || e}`);
+            } catch (e) {
+            this.logger.warn(`Failed to update payment status for ${payment.bookingId}: ${getErrorMessage(e)}`);
           }
 
           // Emit payment completed event
@@ -191,7 +192,7 @@ export class PaymentsService {
       };
 
     } catch (error) {
-      this.logger.error(`Payment verification failed: ${error.message}`);
+      this.logger.error(`Payment verification failed: ${getErrorMessage(error)}`);
       throw error;
     }
   }

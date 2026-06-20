@@ -1,4 +1,5 @@
 import { Injectable, HttpException, HttpStatus } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
@@ -116,7 +117,7 @@ export class GoogleEarthService {
         operationalStatus: place.business_status, // 'OPERATIONAL', 'CLOSED_TEMPORARILY', 'CLOSED_PERMANENTLY'
       }));
     } catch (error) {
-      console.error('Error searching airports:', error.message);
+      console.error('Error searching airports:', getErrorMessage(error));
       return [];
     }
   }
@@ -160,7 +161,7 @@ export class GoogleEarthService {
         types: result.types,
       };
     } catch (error) {
-      console.error('Reverse geocoding error:', error.message);
+      console.error('Reverse geocoding error:', getErrorMessage(error));
       return {
         name: `Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`,
         formattedAddress: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,

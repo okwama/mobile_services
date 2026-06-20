@@ -1,8 +1,11 @@
 import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Like, In } from 'typeorm';
 import { Location } from './entities/location.entity';
 import { GoogleEarthService } from '../google-earth/google-earth.service';
+import { HttpService } from '@nestjs/axios';
+import { firstValueFrom } from 'rxjs';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import { Cache } from 'cache-manager';
 
@@ -12,6 +15,7 @@ export class LocationsService {
     @InjectRepository(Location)
     private locationRepository: Repository<Location>,
     private googleEarthService: GoogleEarthService,
+    private httpService: HttpService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
@@ -82,7 +86,7 @@ export class LocationsService {
           }
         }
       } catch (error) {
-        console.error('Google search failed, falling back to database:', error.message);
+        console.error('Google search failed, falling back to database:', getErrorMessage(error));
       }
     }
 
@@ -204,7 +208,7 @@ export class LocationsService {
       }
     } catch (error) {
       // Don't fail the search if save fails
-      console.error('Error saving Google results to database:', error.message);
+      console.error('Error saving Google results to database:', getErrorMessage(error));
     }
   }
 
@@ -411,6 +415,36 @@ export class LocationsService {
   async googleSearch(query: string, type?: string, location?: string, radius?: number): Promise<any[]> {
     // Use Google Places API for comprehensive airport/airstrip search
     return this.googleEarthService.searchAirports(query, location, radius);
+  }
+
+  async photonSearch(query: string, type?: string, location?: string, radius?: number): Promise<any[]> {
+    try {
+      const q = encodeURIComponent(query);
+      const url = `https://photon.komoot.io/api/?q=${q}&limit=10`;
+      const resp = await firstValueFrom(this.httpService.get(url));
+      const data = resp.data;
+
+      if (!data || !Array.isArray(data.features)) return [];
+
+      // Map Photon features to a common shape similar to Google results
+      const results = data.features.map((f: any) => {
+        const props = f.properties || {};
+        const coords = f.geometry && f.geometry.coordinates ? f.geometry.coordinates : [0, 0];
+        return {
+          placeId: props.osm_id ? `${props.osm_type || 'osm'}_${props.osm_id}` : props.osm_id || null,
+          name: props.name || props.street || props.city || props.label || query,
+          formattedAddress: [props.street, props.city, props.state, props.country].filter(Boolean).join(', '),
+          location: { lat: coords[1], lng: coords[0] },
+          types: [props.osm_key || 'place'],
+          source: 'photon',
+        };
+      });
+
+      return results;
+    } catch (error) {
+      console.error('Photon search failed:', getErrorMessage(error));
+      return [];
+    }
   }
 }
 

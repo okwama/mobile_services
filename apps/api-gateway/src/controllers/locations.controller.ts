@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Query, Param, Inject, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Query, Param, Inject, Req, UseGuards, HttpException, HttpStatus } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiTags, ApiOperation } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
+import { timeout } from 'rxjs/operators';
 import { LOCATION_SERVICE_PATTERNS } from '@app/common';
 import { JwtAuthGuard } from '../guards/jwt-auth.guard';
+import { getErrorMessage, errorIncludesKeyword } from '../utils/error.utils';
 
 @ApiTags('locations')
 @Controller('locations')
@@ -15,14 +17,25 @@ export class LocationsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all locations' })
+  @ApiResponse({ status: 200, description: 'Locations retrieved successfully' })
   async getAll(@Query('type') type?: string) {
-    return firstValueFrom(
-      this.locationService.send({ cmd: 'get_all_locations' }, { type }),
-    );
+    try {
+      return await firstValueFrom(
+        this.locationService.send({ cmd: 'get_all_locations' }, { type }).pipe(
+          timeout(10000)
+        ),
+      );
+    } catch (error) {
+      throw new HttpException(
+        getErrorMessage(error) || 'Failed to retrieve locations',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   @Get('search')
   @ApiOperation({ summary: 'Search locations using Google Places API' })
+  @ApiResponse({ status: 200, description: 'Search results returned' })
   async search(
     @Query('query') query: string,
     @Query('type') type?: string,
@@ -32,28 +45,89 @@ export class LocationsController {
     const searchQuery = query || q;
     
     if (!searchQuery) {
-      return {
-        success: false,
-        message: 'Search query is required',
-        data: [],
-        count: 0,
-      };
+      throw new HttpException(
+        'Search query is required',
+        HttpStatus.BAD_REQUEST,
+      );
     }
 
-    // Use Google search for comprehensive results
-    const locations = await firstValueFrom(
-      this.locationService.send(
-        { cmd: 'google_search_locations' },
-        { query: searchQuery, type },
-      ),
-    );
-    
-    return {
-      success: true,
-      message: 'Locations found',
-      data: locations,
-      count: locations.length,
-    };
+    try {
+      // Use Google search for comprehensive results
+      const locations = await firstValueFrom(
+        this.locationService.send(
+          { cmd: 'google_search_locations' },
+          { query: searchQuery, type },
+        ).pipe(timeout(10000))
+      );
+
+      // If Google returned results, return them
+      if (Array.isArray(locations) && locations.length > 0) {
+        return {
+          success: true,
+          message: 'Locations found',
+          data: locations,
+          count: locations.length,
+        };
+      }
+
+      // If Google returned empty results, try Photon (OSM) as a free fallback
+      try {
+        const photon = await firstValueFrom(
+          this.locationService.send({ cmd: 'photon_search_locations' }, { query: searchQuery, type }).pipe(timeout(5000))
+        );
+
+        if (Array.isArray(photon) && photon.length > 0) {
+          return {
+            success: true,
+            message: 'Locations found (photon fallback)',
+            data: photon,
+            count: photon.length,
+          };
+        }
+      } catch (phError) {
+        console.warn('Photon fallback failed:', getErrorMessage(phError));
+      }
+    } catch (error) {
+      // Log Google-specific failure and attempt fallback to internal search
+      console.warn('Google search failed or timed out, attempting internal search fallback:', getErrorMessage(error));
+
+      try {
+        const fallback = await firstValueFrom(
+          this.locationService.send(LOCATION_SERVICE_PATTERNS.SEARCH_LOCATIONS, { query: searchQuery, type }).pipe(timeout(8000))
+        );
+
+        return {
+          success: true,
+          message: 'Locations found (fallback)',
+          data: fallback,
+          count: Array.isArray(fallback) ? fallback.length : 0,
+        };
+      } catch (fbError) {
+        throw new HttpException(
+          getErrorMessage(fbError) || 'Location search failed',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
+    // If Google returned no results, try internal search as a fallback
+    try {
+      const fallback = await firstValueFrom(
+        this.locationService.send(LOCATION_SERVICE_PATTERNS.SEARCH_LOCATIONS, { query: searchQuery, type }).pipe(timeout(8000))
+      );
+
+      return {
+        success: true,
+        message: 'Locations found (fallback)',
+        data: fallback,
+        count: Array.isArray(fallback) ? fallback.length : 0,
+      };
+    } catch (fbError) {
+      throw new HttpException(
+        getErrorMessage(fbError) || 'Location search failed',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   @Get('popular')

@@ -73,6 +73,16 @@ export class LocationsController {
     return this.locationsService.googleSearch(data.query, data.type, data.location, data.radius);
   }
 
+  @MessagePattern({ cmd: 'photon_search_locations' })
+  async photonSearchLocations(@Payload() data: {
+    query: string;
+    type?: string;
+    location?: string;
+    radius?: number;
+  }) {
+    return this.locationsService.photonSearch(data.query, data.type, data.location, data.radius);
+  }
+
   /**
    * 🆕 Manually trigger OurAirports sync
    */

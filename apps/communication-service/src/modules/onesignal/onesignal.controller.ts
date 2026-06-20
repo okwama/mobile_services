@@ -1,4 +1,5 @@
 import { Controller, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { MessagePattern, EventPattern, Payload } from '@nestjs/microservices';
 import { OneSignalService, RegisterDeviceDto } from './onesignal.service';
 
@@ -21,10 +22,11 @@ export class OneSignalController {
         data: device,
       };
     } catch (error) {
-      this.logger.error(`Failed to register device: ${error.message}`);
+      const msg = getErrorMessage(error);
+      this.logger.error(`Failed to register device: ${msg}`);
       return {
         success: false,
-        message: error.message,
+        message: msg,
       };
     }
   }
@@ -41,10 +43,11 @@ export class OneSignalController {
         message: 'Device unregistered successfully',
       };
     } catch (error) {
-      this.logger.error(`Failed to unregister device: ${error.message}`);
+      const msg = getErrorMessage(error);
+      this.logger.error(`Failed to unregister device: ${msg}`);
       return {
         success: false,
-        message: error.message,
+        message: msg,
       };
     }
   }
@@ -61,10 +64,11 @@ export class OneSignalController {
         data: devices,
       };
     } catch (error) {
-      this.logger.error(`Failed to get user devices: ${error.message}`);
+      const msg = getErrorMessage(error);
+      this.logger.error(`Failed to get user devices: ${msg}`);
       return {
         success: false,
-        message: error.message,
+        message: msg,
       };
     }
   }
@@ -87,10 +91,11 @@ export class OneSignalController {
         message: sent ? 'Test notification sent' : 'No active devices found',
       };
     } catch (error) {
-      this.logger.error(`Failed to send test notification: ${error.message}`);
+      const msg = getErrorMessage(error);
+      this.logger.error(`Failed to send test notification: ${msg}`);
       return {
         success: false,
-        message: error.message,
+        message: msg,
       };
     }
   }

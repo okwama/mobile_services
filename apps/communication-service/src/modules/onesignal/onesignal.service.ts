@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -82,7 +83,7 @@ export class OneSignalService {
       
       return saved;
     } catch (error) {
-      this.logger.error(`Failed to register device token: ${error.message}`);
+      this.logger.error(`Failed to register device token: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -98,7 +99,7 @@ export class OneSignalService {
       );
       this.logger.log(`Unregistered device token: ${playerId}`);
     } catch (error) {
-      this.logger.error(`Failed to unregister device token: ${error.message}`);
+      this.logger.error(`Failed to unregister device token: ${getErrorMessage(error)}`);
     }
   }
 
@@ -159,7 +160,7 @@ export class OneSignalService {
         return false;
       }
     } catch (error) {
-      this.logger.error(`Failed to send OneSignal notification: ${error.message}`);
+      this.logger.error(`Failed to send OneSignal notification: ${getErrorMessage(error)}`);
       if (error.response) {
         this.logger.error(`OneSignal API error:`, error.response.data);
       }

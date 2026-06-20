@@ -9,6 +9,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { EventPattern } from '@nestjs/microservices';
 import { NotificationsService } from './notifications.service';
 import { OneSignalService } from '../onesignal/onesignal.service';
@@ -266,7 +267,7 @@ export class NotificationsGateway
         this.logger.log(`Push notification sent to user ${userId} via OneSignal`);
       }
     } catch (error) {
-      this.logger.error(`Failed to send push notification: ${error.message}`);
+      this.logger.error(`Failed to send push notification: ${getErrorMessage(error)}`);
     }
   }
 

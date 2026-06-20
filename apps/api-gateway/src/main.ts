@@ -8,6 +8,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { ApiGatewayModule } from './api-gateway.module';
 import { REDIS_CONFIG } from '@app/common';
+import { AllExceptionsFilter } from './filters/http-exception.filter';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as morgan from 'morgan';
@@ -42,6 +43,9 @@ async function bootstrap() {
 
   // Global prefix
   app.setGlobalPrefix('api');
+
+  // Global exception filter (must be before validation pipe)
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   // Global validation pipe
   app.useGlobalPipes(

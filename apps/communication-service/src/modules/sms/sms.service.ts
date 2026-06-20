@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { ConfigService } from '@nestjs/config';
 import axios from 'axios';
 
@@ -47,10 +48,11 @@ export class SmsService {
         code: verificationCode, // Return for testing
       };
     } catch (error) {
-      this.logger.error('Infobip SMS error:', error.message);
+      const msg = getErrorMessage(error);
+      this.logger.error('Infobip SMS error:', msg);
       return {
         success: false,
-        message: `Failed to send SMS: ${error.message}`,
+        message: `Failed to send SMS: ${msg}`,
       };
     }
   }
@@ -74,7 +76,7 @@ export class SmsService {
 
       return { success: true };
     } catch (error) {
-      this.logger.error('SMS notification failed:', error.message);
+      this.logger.error('SMS notification failed:', getErrorMessage(error));
       return { success: false };
     }
   }
@@ -115,7 +117,7 @@ export class SmsService {
       this.logger.log(`Inquiry SMS sent to company: ${companyPhone} for ${referenceNumber}`);
       return { success: true };
     } catch (error) {
-      this.logger.error(`SMS notification failed: ${error.message}`);
+      this.logger.error(`SMS notification failed: ${getErrorMessage(error)}`);
       return { success: false };
     }
   }

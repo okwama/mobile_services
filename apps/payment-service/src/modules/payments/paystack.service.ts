@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { getErrorMessage } from '@app/common/utils/error.utils';
 import { ConfigService } from '@nestjs/config';
 import * as Paystack from 'paystack';
 
@@ -69,7 +70,7 @@ export class PaystackService {
       };
 
     } catch (error) {
-      this.logger.error(`Paystack initialization error: ${error.message}`);
+      this.logger.error(`Paystack initialization error: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -92,7 +93,7 @@ export class PaystackService {
       return response.data;
 
     } catch (error) {
-      this.logger.error(`Paystack verification error: ${error.message}`);
+      this.logger.error(`Paystack verification error: ${getErrorMessage(error)}`);
       throw error;
     }
   }
@@ -115,7 +116,7 @@ export class PaystackService {
       return response.data;
 
     } catch (error) {
-      this.logger.error(`Paystack refund error: ${error.message}`);
+      this.logger.error(`Paystack refund error: ${getErrorMessage(error)}`);
       throw error;
     }
   }
