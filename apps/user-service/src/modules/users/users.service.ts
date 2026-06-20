@@ -39,8 +39,22 @@ export class UsersService {
 
     // Create profile if doesn't exist
     if (!profile) {
-      profile = this.profileRepository.create({ userId });
-      await this.profileRepository.save(profile);
+      // Use insert to create a profile with the known primary key (userId).
+      // Using `insert` avoids TypeORM attempting a post-insert update when
+      // primary keys are non-generated and prevents "entity id is not set" errors.
+      try {
+        await this.profileRepository.insert({ userId });
+      } catch (err: any) {
+        // Ignore duplicate-key errors which can occur during a race where another
+        // process created the profile between our findOne and insert.
+        const isDuplicateKey = err && (err.code === 'ER_DUP_ENTRY' || err.errno === 1062);
+        if (!isDuplicateKey) {
+          console.error('Failed to create user_profile for', userId, err);
+          throw err;
+        }
+      }
+
+      profile = await this.profileRepository.findOne({ where: { userId } });
     }
 
     const { password, ...sanitizedUser } = user;
