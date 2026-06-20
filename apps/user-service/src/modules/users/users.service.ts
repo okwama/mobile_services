@@ -25,6 +25,10 @@ export class UsersService {
   }
 
   async getUserProfile(userId: string) {
+    if (!userId) {
+      console.error('getUserProfile called without userId');
+      throw new Error('Missing userId');
+    }
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });

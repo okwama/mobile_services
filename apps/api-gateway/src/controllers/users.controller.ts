@@ -1,4 +1,4 @@
-import { Controller, Get, Put, Delete, Body, Param, Query, Inject, UseGuards } from '@nestjs/common';
+import { Controller, Get, Put, Delete, Body, Param, Query, Inject, UseGuards, Headers } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
@@ -13,7 +13,24 @@ export class UsersController {
 
   @Get('profile')
   @ApiOperation({ summary: 'Get user profile' })
-  async getProfile(@Query('userId') userId: string) {
+  async getProfile(@Query('userId') userId: string, @Headers('authorization') auth?: string) {
+    // If caller didn't provide a userId, attempt to derive it from JWT in the
+    // Authorization header (common pattern for "me" endpoints).
+    if (!userId && auth) {
+      try {
+        const token = auth.replace(/^Bearer\s+/i, '').trim();
+        const parts = token.split('.');
+        if (parts.length >= 2) {
+          const payload = JSON.parse(Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
+          if (payload && payload.sub) {
+            userId = payload.sub;
+          }
+        }
+      } catch (e) {
+        // ignore decode errors; downstream will handle missing userId
+      }
+    }
+
     return firstValueFrom(
       this.userService.send(USER_SERVICE_PATTERNS.GET_USER_PROFILE, { userId }),
     );
