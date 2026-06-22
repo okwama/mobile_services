@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices';
@@ -41,6 +41,11 @@ export class BookingsService {
         throw new NotFoundException('User not found');
       }
 
+      // Normalize booking type from mobile app client
+      if (dto.bookingType === 'direct_charter') {
+        dto.bookingType = BookingType.DIRECT;
+      }
+
       // Step 2: Check availability based on booking type
       let dealOrExperience;
       console.log('[BOOKING] dto.bookingType:', dto.bookingType);
@@ -48,8 +53,14 @@ export class BookingsService {
       console.log('[BOOKING] dto.aircraftId:', dto.aircraftId);
       if (dto.bookingType === BookingType.DEAL && dto.dealId) {
         dealOrExperience = await firstValueFrom(
-          this.charterService.send({ cmd: 'check_deal_availability' }, { dealId: dto.dealId })
+          this.charterService.send({ cmd: 'get_charter_deal' }, { id: dto.dealId })
         );
+        if (!dealOrExperience) {
+          throw new NotFoundException(`Charter deal with ID ${dto.dealId} not found`);
+        }
+        if (dto.companyId && dealOrExperience.companyId !== dto.companyId) {
+          throw new BadRequestException('Company ID does not match the charter deal');
+        }
       } else if (dto.bookingType === BookingType.EXPERIENCE && dto.experienceTemplateId) {
         // For template-based experiences (fixed pricing, no schedules)
         dealOrExperience = await firstValueFrom(
@@ -86,6 +97,44 @@ export class BookingsService {
           })
         );
       }
+      
+      // Step 2.5: Extract and validate companyId & availability
+      let resolvedCompanyId = dto.companyId;
+
+      if (dto.bookingType === BookingType.DEAL && dto.dealId) {
+        if (dealOrExperience) {
+          resolvedCompanyId = dealOrExperience.companyId;
+        }
+      } else if (dto.bookingType === BookingType.EXPERIENCE && dto.experienceTemplateId) {
+        if (dealOrExperience) {
+          resolvedCompanyId = dealOrExperience.companyId;
+          if (dto.companyId && dealOrExperience.companyId !== dto.companyId) {
+            throw new BadRequestException('Company ID does not match the experience template');
+          }
+        }
+      } else if (dto.bookingType === BookingType.DIRECT && dto.aircraftId) {
+        if (!dealOrExperience) {
+          throw new NotFoundException(`Aircraft with ID ${dto.aircraftId} not found`);
+        }
+        if (!dealOrExperience.available) {
+          throw new BadRequestException(`Aircraft with ID ${dto.aircraftId} is not available: ${dealOrExperience.message || ''}`);
+        }
+        resolvedCompanyId = dealOrExperience.companyId;
+        if (dto.companyId && dealOrExperience.companyId !== dto.companyId) {
+          throw new BadRequestException('Company ID does not match the aircraft company');
+        }
+      } else if (dto.bookingType === 'yacht' && dto.yachtId) {
+        if (!dealOrExperience || !dealOrExperience.yacht) {
+          throw new NotFoundException(`Yacht with ID ${dto.yachtId} not found`);
+        }
+        if (!dealOrExperience.available) {
+          throw new BadRequestException(`Yacht with ID ${dto.yachtId} is not available`);
+        }
+        resolvedCompanyId = dealOrExperience.yacht.companyId;
+        if (dto.companyId && dealOrExperience.yacht.companyId !== dto.companyId) {
+          throw new BadRequestException('Company ID does not match the yacht company');
+        }
+      }
 
       // Step 3: Create booking
       const referenceNumber = this.generateReferenceNumber();
@@ -101,7 +150,7 @@ export class BookingsService {
       const now = new Date();
       const booking = queryRunner.manager.create(Booking, {
         userId: dto.userId,
-        companyId: dealOrExperience?.companyId || dto.companyId,
+        companyId: resolvedCompanyId,
         aircraftId: dto.aircraftId,
         bookingType: dto.bookingType,
         dealId: dto.dealId,
