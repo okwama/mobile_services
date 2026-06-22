@@ -46,6 +46,22 @@ export class BookingsService {
         dto.bookingType = BookingType.DIRECT;
       }
 
+      // Infer bookingType from payload fields if not provided
+      if (!dto.bookingType) {
+        if (dto.dealId) {
+          dto.bookingType = BookingType.DEAL;
+        } else if (dto.aircraftId) {
+          dto.bookingType = BookingType.DIRECT;
+        } else if (dto.experienceTemplateId) {
+          dto.bookingType = BookingType.EXPERIENCE;
+        } else if (dto.yachtId) {
+          dto.bookingType = BookingType.YACHT;
+        }
+        if (dto.bookingType) {
+          console.log('[BOOKING] Inferred bookingType from payload:', dto.bookingType);
+        }
+      }
+
       // Step 2: Check availability based on booking type
       let dealOrExperience;
       console.log('[BOOKING] dto.bookingType:', dto.bookingType);

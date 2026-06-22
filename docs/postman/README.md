@@ -1,200 +1,183 @@
 # Air Charters API - Postman Collection
 
-Complete Postman collection for testing the Air Charters microservices API.
+Production-ready Postman collection targeting `https://gateway.aircharterss.com`.
 
 ## 📦 Files
 
-- **Air_Charters_API.postman_collection.json** - Main API collection (100+ endpoints)
-- **Air_Charters_Production.postman_environment.json** - Production environment variables
+| File | Purpose |
+|------|---------|
+| `Air_Charters_API.postman_collection.json` | **Main collection** — import this |
+| `Air_Charters_Production.postman_environment.json` | Production environment (`gateway.aircharterss.com`) |
+| `Air_Charters_Local.postman_environment.json` | Local environment (`localhost:5007`) |
 
 ## 🚀 Quick Start
 
-### 1. Import into Postman
+1. Open **Postman** → **Import** → upload `Air_Charters_API.postman_collection.json`
+2. Import the environment file you want (Production or Local)
+3. Select the environment in the top-right dropdown
+4. Run **🔐 Authentication → Login (Email)** — the token is automatically saved
+5. All other requests will use `{{access_token}}` automatically
 
-1. Open **Postman** (download: https://www.postman.com/downloads/)
-2. Click **Import** → **Upload Files**
-3. Select `Air_Charters_API.postman_collection.json`
-4. Import the environment: **Air_Charters_Production.postman_environment.json**
+## 🔑 Login
 
-### 2. Select Environment
-
-- Click the **Environment** dropdown (top-right)
-- Select **Air Charters - Production**
-
-### 3. Login
-
-Go to **🔐 Authentication → Login** and send with either:
-
-**Email Login:**
+**Email:**
 ```json
-{
-  "email": "user@example.com",
-  "password": "SecurePassword123!"
-}
+{ "email": "test@example.com", "password": "Test123!@#" }
 ```
 
-**Phone Login:**
+**Phone:**
 ```json
-{
-  "phoneNumber": "+254706166875",
-  "password": "SecurePassword123!"
-}
+{ "phoneNumber": "+254706166875", "password": "SecurePassword123!" }
 ```
 
-Token automatically saves to `{{access_token}}` and `{{refresh_token}}` variables.
-
-> **Backward Compatibility:** Existing apps using `/api/auth/login/phone` continue to work unchanged.
-
-## 📚 API Endpoints
-
-The collection includes 13 sections with 100+ endpoints:
-
-- 🔐 **Authentication** (7 endpoints)
-- 👤 **User Management** (5 endpoints)
-- 🛫 **Charters & Aircraft** (6 endpoints)
-- 🚤 **Yachts** (5 endpoints)
-- 🎯 **Experiences** (4 endpoints)
-- 📅 **Bookings** (7 endpoints)
-- 💳 **Payments** (6 endpoints)
-- 💰 **Wallet** (3 endpoints)
-- 🛂 **Passengers** (4 endpoints)
-- 📍 **Locations** (3 endpoints)
-- 🔔 **Notifications & Communication** (5 endpoints)
-- 📱 **Devices** (2 endpoints)
-- 🏥 **Health & System** (4 endpoints)
-
-## 🔑 Authentication
-
-### Login Endpoints
-
-The system supports **two ways to login** using a unified or legacy endpoint:
-
-**Option 1: Unified Endpoint (Recommended)**
-```
-POST /api/auth/login
-
-// Email:
-{ "email": "user@example.com", "password": "..." }
-
-// OR Phone:
-{ "phoneNumber": "+254706166875", "password": "..." }
-```
-
-**Option 2: Phone Endpoint (Backward Compatible)**
-```
-POST /api/auth/login/phone
-{ "phoneNumber": "+254706166875", "password": "..." }
-```
-
-Both endpoints return the same response with tokens.
-
-### Token Management
-
-Tokens are automatically saved after login:
-- `{{access_token}}` - JWT token for API requests (expires in 1 hour)
-- `{{refresh_token}}` - Token to get new access token
-
-**Refresh expired token:**
-```
-POST /api/auth/refresh
-{ "refreshToken": "{{refresh_token}}" }
-```
-
-## 🧪 Testing Workflows
-
-### Workflow 1: Register & Login
-```
-1. Register → 🔐 Authentication → Register User
-2. Login → 🔐 Authentication → Login (token auto-saves)
-3. Get Profile → 👤 User Management → Get Current User Profile
-```
-
-### Workflow 2: Book a Charter
-```
-1. Login (get token)
-2. Search → 🛫 Charters → Search Charter Deals
-3. Book → 🛫 Charters → Create Charter Booking
-4. View → 📅 Bookings → Get Booking Details
-```
-
-### Workflow 3: Process Payment
-```
-1. Create booking (above)
-2. Add Method → 💳 Payments → Add Payment Method
-3. Process → 💳 Payments → Process Payment
-4. History → 💳 Payments → Get Payment History
-```
-
-## 🔄 Environment Variables
-
-Update these in the environment:
-
-| Variable | Value |
-|----------|-------|
-| `base_url` | https://gateway.aircharterss.com |
-| `access_token` | (auto-filled after login) |
-| `refresh_token` | (auto-filled after login) |
-| `test_user_email` | test@aircharterss.com |
-| `test_user_phone` | +254706166875 |
-| `test_user_password` | (set your password) |
-
-## 📝 Request Format
-
-All authenticated requests automatically include:
-```
-Authorization: Bearer {{access_token}}
-```
-
-All requests use:
-```
-Content-Type: application/json
-```
-
-## ⚡ Tips
-
-### Auto-Save Tokens
-The **Login** endpoint has a test script that auto-saves the token. Just send the login request and tokens are immediately available for other requests.
-
-### Test Multiple Users
-Update `test_user_email` and `test_user_password` in the environment to test with different accounts.
-
-### Check Service Health
-Before testing:
-```
-GET /api/health/all
-```
-
-All services should return `"status": "healthy"`.
-
-### View Live Dashboard
-```
-GET /api/health/dashboard
-```
-
-Opens an HTML dashboard showing real-time service status.
-
-## 🐛 Troubleshooting
-
-**401 Unauthorized**
-- Token expired → Use **Refresh Token** endpoint
-- Token invalid → Re-login with **Login** endpoint
-- Check environment has correct token
-
-**404 Not Found**
-- Verify path parameters (`:bookingId`, `:userId`, etc.)
-- Check for typos in endpoint path
-- Ensure using correct base_url
-
-**500 Server Error**
-- Check service health: `GET /api/health/all`
-- Verify request body matches expected format
-- Check PM2 logs: `pm2 logs`
-
-## 📄 Documentation
-
-- See [API_QUICK_REFERENCE.md](../../API_QUICK_REFERENCE.md) for quick reference
-- See [POSTMAN_COLLECTION_GUIDE.md](../../POSTMAN_COLLECTION_GUIDE.md) for detailed guide
+After login the test script auto-saves `access_token`, `refresh_token`, and `user_id`.
 
 ---
 
-**Ready to test! Import the collection and start exploring the API.** 🚀
+## 📚 Collection Structure
+
+### 🔐 Authentication (6 requests)
+- Register User
+- Login (Email) — *auto-saves token*
+- Login (Phone) — *auto-saves token*
+- Login (Phone - Legacy `/api/auth/login/phone`)
+- Refresh Token
+- Request Password Reset
+- Logout
+
+### 👤 User Management (5 requests)
+- Get Current User Profile
+- Update User Profile
+- Get User by ID
+- Change Password
+- Get Wallet Balance
+
+### 🛫 Charter Deals (3 requests)
+- Get All Charter Deals
+- Get Charter Deal by ID
+- Search Charter Deals
+
+### ✈️ Direct Charter (3 requests)
+- Get All Aircraft
+- Get Aircraft by ID
+- Check Aircraft Availability
+
+### 🎯 Experiences (2 requests)
+- Get All Experiences
+- Get Experience by ID
+
+### 🚤 Yachts (2 requests)
+- Get All Yachts
+- Get Yacht by ID
+
+### 📅 Bookings (7 requests)
+- **Create Deal Booking** — uses `bookingType: "deal"`, `dealId`
+- **Create Direct Charter Booking** — uses `bookingType: "direct"`, `aircraftId` + optional `stops[]`
+- **Create Experience Booking** — uses `bookingType: "experience"`, `experienceTemplateId`
+- **Create Yacht Booking** — uses `bookingType: "yacht"`, `yachtId`
+- Get Booking by ID
+- Get My Bookings
+- Update Booking Status
+- Cancel Booking
+
+### 💳 Payments - Paystack (6 requests)
+- **Initialize Paystack Payment** — `POST /api/payments/paystack/initialize` — *auto-saves reference*
+- **Verify Paystack Payment** — `GET /api/payments/paystack/verify/:reference`
+- Initialize Payment (Legacy `/api/payments/initialize`)
+- Verify Payment (Legacy `/api/payments/verify/:reference`)
+- Get Payment by ID
+- Process Refund
+
+### 📍 Locations (2 requests)
+- Search Locations
+- Get Airports
+
+### 🏥 Health & System (4 requests)
+- API Gateway Health
+- All Services Health
+- Health Dashboard (HTML)
+- Swagger Docs
+
+---
+
+## 🧪 Booking Payload Reference
+
+All 4 booking types share `POST /api/bookings` with bearer auth. The `bookingType` field determines routing.
+
+### Passenger Schema (matches `charter_passengers` table)
+```json
+{
+  "firstName": "string",       // required
+  "lastName": "string",        // required
+  "age": 30,                   // optional int
+  "nationality": "string",     // optional
+  "idPassportNumber": "string",// optional
+  "isUser": true               // bool — true for the booking user
+}
+```
+
+### Deal Booking
+```json
+{
+  "bookingType": "deal",
+  "dealId": 1,
+  "totalPrice": 5000.00,
+  "passengers": [{ ... }]
+}
+```
+
+### Direct Charter Booking
+```json
+{
+  "bookingType": "direct",
+  "aircraftId": 1,
+  "totalPrice": 12000.00,
+  "passengers": [{ ... }],
+  "stops": [{ "stopName": "...", "latitude": ..., "longitude": ..., "stopOrder": 1, "locationType": "airstrip" }]
+}
+```
+
+### Experience Booking
+```json
+{
+  "bookingType": "experience",
+  "experienceTemplateId": 1,
+  "totalPrice": 800.00,
+  "passengers": [{ ... }]
+}
+```
+
+### Yacht Booking
+```json
+{
+  "bookingType": "yacht",
+  "yachtId": 1,
+  "totalPrice": 3500.00,
+  "passengers": [{ ... }]
+}
+```
+
+---
+
+## 🔄 Test Workflow: Deal Booking + Payment
+
+```
+1. Login (Email)                       → token auto-saved
+2. Bookings → Create Deal Booking      → booking_id auto-saved
+3. Payments → Initialize Paystack      → paystack_reference auto-saved
+4. Payments → Verify Paystack Payment  → check status
+5. Bookings → Get Booking by ID       → confirm bookingStatus = "confirmed"
+```
+
+---
+
+## 🐛 Troubleshooting
+
+| Error | Fix |
+|-------|-----|
+| `401 Unauthorized` | Re-run Login — token may be expired (1h TTL) |
+| `404 Not Found` | Check `{{deal_id}}`, `{{aircraft_id}}` etc. exist in DB |
+| `400 Bad Request` | Check payload matches schema above |
+| `500 Server Error` | Run Health → All Services Health to find the failing service |
+
+**Check PM2 logs on server:** `pm2 logs --lines 50`

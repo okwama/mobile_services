@@ -1,8 +1,18 @@
 {
   "info": {
-    "name": "Air Charters Microservices API",
-    "description": "Complete API collection for Air Charters microservices platform - Production Ready",
+    "name": "Air Charters API - Production",
+    "description": "Complete production-ready API collection for Air Charters. All request bodies match the actual DB entities and service contracts. Base URL: https://gateway.aircharterss.com",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{access_token}}",
+        "type": "string"
+      }
+    ]
   },
   "item": [
     {
@@ -11,232 +21,138 @@
         {
           "name": "Register User",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+1234567890\",\n  \"countryCode\": \"+1\"\n}"
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePassword123!\",\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+254706166875\",\n  \"countryCode\": \"+254\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "register"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "register"]
             }
           }
         },
         {
-          "name": "Login (Email or Phone)",
+          "name": "Login (Email)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('access_token', jsonData.accessToken);",
-                  "  pm.environment.set('refresh_token', jsonData.refreshToken);",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  pm.environment.set('access_token', data.accessToken);",
+                  "  pm.environment.set('refresh_token', data.refreshToken);",
+                  "  pm.environment.set('user_id', data.user ? data.user.id : '');",
+                  "  console.log('✅ Login OK. Token saved. UserID: ' + (data.user ? data.user.id : 'n/a'));",
+                  "} else {",
+                  "  console.log('❌ Login failed: ' + pm.response.text());",
                   "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"SecurePassword123!\"\n}\n\n// OR use phone number:\n// {\n//   \"phoneNumber\": \"+254706166875\",\n//   \"password\": \"SecurePassword123!\"\n// }"
+              "raw": "{\n  \"email\": \"test@example.com\",\n  \"password\": \"Test123!@#\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
             }
           }
         },
         {
-          "name": "Login with Phone (Deprecated - Use Login above)",
+          "name": "Login (Phone)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('access_token', jsonData.accessToken);",
-                  "  pm.environment.set('refresh_token', jsonData.refreshToken);",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  pm.environment.set('access_token', data.accessToken);",
+                  "  pm.environment.set('refresh_token', data.refreshToken);",
+                  "  pm.environment.set('user_id', data.user ? data.user.id : '');",
+                  "  console.log('✅ Login OK. UserID: ' + (data.user ? data.user.id : 'n/a'));",
                   "}"
                 ]
               }
             }
           ],
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"phoneNumber\": \"+254706166875\",\n  \"password\": \"SecurePassword123!\"\n}\n\nNote: This endpoint is deprecated for backward compatibility.\nUse POST /api/auth/login with phoneNumber field instead."
+              "raw": "{\n  \"phoneNumber\": \"+254706166875\",\n  \"password\": \"SecurePassword123!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login"]
+            }
+          }
+        },
+        {
+          "name": "Login (Phone - Legacy Endpoint)",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phoneNumber\": \"+254706166875\",\n  \"password\": \"SecurePassword123!\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/login/phone",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login",
-                "phone"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "login", "phone"]
             }
           }
-        }
+        },
         {
           "name": "Refresh Token",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "if (pm.response.code === 200) {",
-                  "  var jsonData = pm.response.json();",
-                  "  pm.environment.set('access_token', jsonData.accessToken);",
-                  "}"
-                ]
-              }
-            }
-          ],
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/refresh",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "refresh"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "refresh"]
             }
           }
         },
         {
-          "name": "Forgot Password",
+          "name": "Request Password Reset",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
               "raw": "{\n  \"email\": \"user@example.com\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/auth/forgot-password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "forgot-password"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Reset Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"code\": \"reset-code-from-email\",\n  \"email\": \"user@example.com\",\n  \"newPassword\": \"NewPassword123!\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/reset-password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "reset-password"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Login with Biometric",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"biometricId\": \"fingerprint-123\",\n  \"userId\": \"user-456\",\n  \"userEmail\": \"user@example.com\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/auth/login/biometric",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "login",
-                "biometric"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "forgot-password"]
             }
           }
         },
@@ -244,22 +160,11 @@
           "name": "Logout",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/auth/logout",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "auth",
-                "logout"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "auth", "logout"]
             }
           }
         }
@@ -272,22 +177,11 @@
           "name": "Get Current User Profile",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
               "raw": "{{base_url}}/api/users/profile",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "profile"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile"]
             }
           }
         },
@@ -295,61 +189,15 @@
           "name": "Update User Profile",
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phone\": \"+1234567890\",\n  \"avatar\": \"https://example.com/avatar.jpg\",\n  \"bio\": \"Aviation enthusiast\"\n}"
+              "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"phoneNumber\": \"+254706166875\",\n  \"nationality\": \"Kenyan\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/users/profile",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "profile"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Change Password",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"oldPassword\": \"CurrentPassword123!\",\n  \"newPassword\": \"NewPassword123!\",\n  \"confirmPassword\": \"NewPassword123!\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/users/change-password",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                "change-password"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "profile"]
             }
           }
         },
@@ -357,237 +205,88 @@
           "name": "Get User by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/users/:userId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users",
-                ":userId"
-              ],
-              "variable": [
-                {
-                  "key": "userId",
-                  "value": "user-123"
-                }
-              ]
+              "raw": "{{base_url}}/api/users/{{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "{{user_id}}"]
             }
           }
         },
         {
-          "name": "List All Users (Admin)",
+          "name": "Change Password",
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"OldPassword123!\",\n  \"newPassword\": \"NewPassword456!\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/users/change-password",
+              "host": ["{{base_url}}"],
+              "path": ["api", "users", "change-password"]
+            }
+          }
+        },
+        {
+          "name": "Get Wallet Balance",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/users?page=1&limit=20&role=passenger",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "users"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "role",
-                  "value": "passenger"
-                }
-              ]
+              "raw": "{{base_url}}/api/wallet/balance?userId={{user_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "wallet", "balance"],
+              "query": [{ "key": "userId", "value": "{{user_id}}" }]
             }
           }
         }
       ]
     },
     {
-      "name": "🛫 Charters & Aircraft",
+      "name": "🛫 Charter Deals",
       "item": [
-        {
-          "name": "Search Charter Deals",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/charters/search?departure=New York&arrival=Miami&date=2024-07-15&passengers=4",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "charters",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "departure",
-                  "value": "New York"
-                },
-                {
-                  "key": "arrival",
-                  "value": "Miami"
-                },
-                {
-                  "key": "date",
-                  "value": "2024-07-15"
-                },
-                {
-                  "key": "passengers",
-                  "value": "4"
-                }
-              ]
-            }
-          }
-        },
         {
           "name": "Get All Charter Deals",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/charter-deals?page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "charter-deals"
-              ],
+              "raw": "{{base_url}}/api/charter-deals?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charter-deals"],
               "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
               ]
             }
           }
         },
         {
-          "name": "Get Charter Details",
+          "name": "Get Charter Deal by ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/charters/:charterId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "charters",
-                ":charterId"
-              ],
-              "variable": [
-                {
-                  "key": "charterId",
-                  "value": "charter-123"
-                }
-              ]
+              "raw": "{{base_url}}/api/charter-deals/{{deal_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charter-deals", "{{deal_id}}"]
             }
           }
         },
         {
-          "name": "Create Charter Booking",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"charterId\": \"charter-123\",\n  \"numberOfPassengers\": 4,\n  \"departureDate\": \"2024-07-15\",\n  \"returnDate\": \"2024-07-18\",\n  \"specialRequests\": \"Catering required\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/charters/book",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "charters",
-                "book"
-              ]
-            }
-          }
-        },
-        {
-          "name": "List Aircraft",
+          "name": "Search Charter Deals",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/aircraft?type=jet&capacity=6",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "aircraft"
-              ],
+              "raw": "{{base_url}}/api/charter-deals/search?origin=Nairobi&destination=Mombasa",
+              "host": ["{{base_url}}"],
+              "path": ["api", "charter-deals", "search"],
               "query": [
-                {
-                  "key": "type",
-                  "value": "jet"
-                },
-                {
-                  "key": "capacity",
-                  "value": "6"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Aircraft Details",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/aircraft/:aircraftId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "aircraft",
-                ":aircraftId"
-              ],
-              "variable": [
-                {
-                  "key": "aircraftId",
-                  "value": "aircraft-123"
-                }
+                { "key": "origin", "value": "Nairobi" },
+                { "key": "destination", "value": "Mombasa" }
               ]
             }
           }
@@ -595,154 +294,46 @@
       ]
     },
     {
-      "name": "🚤 Yachts",
+      "name": "✈️ Direct Charter",
       "item": [
         {
-          "name": "Search Yachts",
+          "name": "Get All Aircraft",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/yachts/search?location=Miami&date=2024-07-15&passengers=6",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "yachts",
-                "search"
-              ],
+              "raw": "{{base_url}}/api/direct-charters/aircraft?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "direct-charters", "aircraft"],
               "query": [
-                {
-                  "key": "location",
-                  "value": "Miami"
-                },
-                {
-                  "key": "date",
-                  "value": "2024-07-15"
-                },
-                {
-                  "key": "passengers",
-                  "value": "6"
-                }
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
               ]
             }
           }
         },
         {
-          "name": "Get All Yachts",
+          "name": "Get Aircraft by ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/yachts?page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "yachts"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
-              ]
+              "raw": "{{base_url}}/api/direct-charters/aircraft/{{aircraft_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "direct-charters", "aircraft", "{{aircraft_id}}"]
             }
           }
         },
         {
-          "name": "Get Yacht Details",
+          "name": "Check Aircraft Availability",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/yachts/:yachtId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "yachts",
-                ":yachtId"
-              ],
-              "variable": [
-                {
-                  "key": "yachtId",
-                  "value": "yacht-123"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Check Yacht Availability",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/yachts/:yachtId/availability?startDate=2024-07-15&endDate=2024-07-18",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "yachts",
-                ":yachtId",
-                "availability"
-              ],
-              "query": [
-                {
-                  "key": "startDate",
-                  "value": "2024-07-15"
-                },
-                {
-                  "key": "endDate",
-                  "value": "2024-07-18"
-                }
-              ],
-              "variable": [
-                {
-                  "key": "yachtId",
-                  "value": "yacht-123"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Book Yacht",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"yachtId\": \"yacht-123\",\n  \"startDate\": \"2024-07-15\",\n  \"endDate\": \"2024-07-18\",\n  \"numberOfGuests\": 6,\n  \"specialRequests\": \"Chef required\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/yachts/book",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "yachts",
-                "book"
-              ]
+              "raw": "{{base_url}}/api/direct-charters/aircraft/{{aircraft_id}}/availability?date=2026-08-15",
+              "host": ["{{base_url}}"],
+              "path": ["api", "direct-charters", "aircraft", "{{aircraft_id}}", "availability"],
+              "query": [{ "key": "date", "value": "2026-08-15" }]
             }
           }
         }
@@ -757,107 +348,58 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/experiences?page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "experiences"
-              ],
+              "raw": "{{base_url}}/api/experiences?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experiences"],
               "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
               ]
             }
           }
         },
         {
-          "name": "Search Experiences",
+          "name": "Get Experience by ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/experiences/search?category=adventure&location=Miami",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "experiences",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "category",
-                  "value": "adventure"
-                },
-                {
-                  "key": "location",
-                  "value": "Miami"
-                }
-              ]
+              "raw": "{{base_url}}/api/experiences/{{experience_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "experiences", "{{experience_id}}"]
             }
           }
-        },
+        }
+      ]
+    },
+    {
+      "name": "🚤 Yachts",
+      "item": [
         {
-          "name": "Get Experience Details",
+          "name": "Get All Yachts",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/experiences/:experienceId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "experiences",
-                ":experienceId"
-              ],
-              "variable": [
-                {
-                  "key": "experienceId",
-                  "value": "exp-123"
-                }
+              "raw": "{{base_url}}/api/yachts?page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "yachts"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
               ]
             }
           }
         },
         {
-          "name": "Book Experience",
+          "name": "Get Yacht by ID",
           "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"experienceId\": \"exp-123\",\n  \"date\": \"2024-07-15\",\n  \"numberOfParticipants\": 4,\n  \"specialRequests\": \"Group discount if available\"\n}"
-            },
+            "method": "GET",
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/experiences/book",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "experiences",
-                "book"
-              ]
+              "raw": "{{base_url}}/api/yachts/{{yacht_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "yachts", "{{yacht_id}}"]
             }
           }
         }
@@ -867,134 +409,181 @@
       "name": "📅 Bookings",
       "item": [
         {
-          "name": "Get All Bookings",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
+          "name": "Create Deal Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  var id = data.id || (data.booking && data.booking.id);",
+                  "  pm.environment.set('booking_id', id);",
+                  "  console.log('✅ Deal Booking created. ID: ' + id + ' Ref: ' + (data.referenceNumber || data.booking?.referenceNumber));",
+                  "} else {",
+                  "  console.log('❌ Booking failed: ' + pm.response.text());",
+                  "}"
+                ]
               }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/bookings?page=1&limit=20&status=confirmed",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "bookings"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                },
-                {
-                  "key": "status",
-                  "value": "confirmed"
-                }
-              ]
             }
-          }
-        },
-        {
-          "name": "Get Booking Details",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/bookings/:bookingId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "bookings",
-                ":bookingId"
-              ],
-              "variable": [
-                {
-                  "key": "bookingId",
-                  "value": "booking-123"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Create Booking",
+          ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"serviceType\": \"charter\",\n  \"serviceId\": \"charter-123\",\n  \"startDate\": \"2024-07-15\",\n  \"endDate\": \"2024-07-18\",\n  \"numberOfPassengers\": 4,\n  \"totalPrice\": 5000\n}"
+              "raw": "{\n  \"bookingType\": \"deal\",\n  \"dealId\": 1,\n  \"totalPrice\": 5000.00,\n  \"subtotal\": 4761.90,\n  \"taxType\": \"VAT\",\n  \"taxAmount\": 238.10,\n  \"totalAdults\": 2,\n  \"totalChildren\": 0,\n  \"onboardDining\": false,\n  \"specialRequirements\": \"Window seats preferred\",\n  \"originName\": \"Nairobi Wilson Airport\",\n  \"originLatitude\": -1.3218,\n  \"originLongitude\": 36.8148,\n  \"destinationName\": \"Mombasa Moi International\",\n  \"destinationLatitude\": -4.0348,\n  \"destinationLongitude\": 39.5942,\n  \"departureDateTime\": \"2026-08-15T08:00:00Z\",\n  \"passengers\": [\n    {\n      \"firstName\": \"John\",\n      \"lastName\": \"Doe\",\n      \"age\": 35,\n      \"nationality\": \"Kenyan\",\n      \"idPassportNumber\": \"A1234567\",\n      \"isUser\": true\n    },\n    {\n      \"firstName\": \"Jane\",\n      \"lastName\": \"Doe\",\n      \"age\": 32,\n      \"nationality\": \"Kenyan\",\n      \"idPassportNumber\": \"B7654321\",\n      \"isUser\": false\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/bookings",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "bookings"
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Create Direct Charter Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  var id = data.id || (data.booking && data.booking.id);",
+                  "  pm.environment.set('booking_id', id);",
+                  "  console.log('✅ Direct Charter Booking created. ID: ' + id);",
+                  "} else {",
+                  "  console.log('❌ Booking failed: ' + pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingType\": \"direct\",\n  \"aircraftId\": 1,\n  \"totalPrice\": 12000.00,\n  \"subtotal\": 11428.57,\n  \"taxType\": \"VAT\",\n  \"taxAmount\": 571.43,\n  \"totalAdults\": 4,\n  \"totalChildren\": 1,\n  \"onboardDining\": true,\n  \"specialRequirements\": \"Halal catering required\",\n  \"originName\": \"Nairobi Wilson Airport\",\n  \"originLatitude\": -1.3218,\n  \"originLongitude\": 36.8148,\n  \"destinationName\": \"Zanzibar Airport\",\n  \"destinationLatitude\": -6.2202,\n  \"destinationLongitude\": 39.2248,\n  \"departureDateTime\": \"2026-09-01T07:30:00Z\",\n  \"passengers\": [\n    {\n      \"firstName\": \"Alice\",\n      \"lastName\": \"Smith\",\n      \"age\": 40,\n      \"nationality\": \"British\",\n      \"idPassportNumber\": \"GB123456\",\n      \"isUser\": true\n    },\n    {\n      \"firstName\": \"Bob\",\n      \"lastName\": \"Smith\",\n      \"age\": 38,\n      \"nationality\": \"British\",\n      \"idPassportNumber\": \"GB789012\",\n      \"isUser\": false\n    },\n    {\n      \"firstName\": \"Charlie\",\n      \"lastName\": \"Smith\",\n      \"age\": 12,\n      \"nationality\": \"British\",\n      \"idPassportNumber\": \"GB345678\",\n      \"isUser\": false\n    }\n  ],\n  \"stops\": [\n    {\n      \"stopName\": \"Amboseli Airstrip\",\n      \"latitude\": -2.6450,\n      \"longitude\": 37.2535,\n      \"stopOrder\": 1,\n      \"locationType\": \"airstrip\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Create Experience Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  pm.environment.set('booking_id', data.id || (data.booking && data.booking.id));",
+                  "  console.log('✅ Experience Booking created. ID: ' + pm.environment.get('booking_id'));",
+                  "} else {",
+                  "  console.log('❌ Booking failed: ' + pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingType\": \"experience\",\n  \"experienceTemplateId\": 1,\n  \"totalPrice\": 800.00,\n  \"totalAdults\": 2,\n  \"totalChildren\": 0,\n  \"onboardDining\": false,\n  \"specialRequirements\": \"Photography tour\",\n  \"departureDateTime\": \"2026-08-20T09:00:00Z\",\n  \"passengers\": [\n    {\n      \"firstName\": \"Mark\",\n      \"lastName\": \"Johnson\",\n      \"age\": 29,\n      \"nationality\": \"American\",\n      \"idPassportNumber\": \"US987654\",\n      \"isUser\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Create Yacht Booking",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200 || pm.response.code === 201) {",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  pm.environment.set('booking_id', data.id || (data.booking && data.booking.id));",
+                  "  console.log('✅ Yacht Booking created. ID: ' + pm.environment.get('booking_id'));",
+                  "} else {",
+                  "  console.log('❌ Booking failed: ' + pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"bookingType\": \"yacht\",\n  \"yachtId\": 1,\n  \"totalPrice\": 3500.00,\n  \"totalAdults\": 6,\n  \"totalChildren\": 0,\n  \"onboardDining\": true,\n  \"specialRequirements\": \"Sunset cruise, champagne on arrival\",\n  \"departureDateTime\": \"2026-09-10T17:00:00Z\",\n  \"originName\": \"Mombasa Marina\",\n  \"originLatitude\": -4.0577,\n  \"originLongitude\": 39.6583,\n  \"destinationName\": \"Wasini Island\",\n  \"destinationLatitude\": -4.6667,\n  \"destinationLongitude\": 39.3667,\n  \"passengers\": [\n    {\n      \"firstName\": \"Sarah\",\n      \"lastName\": \"Williams\",\n      \"age\": 33,\n      \"nationality\": \"South African\",\n      \"idPassportNumber\": \"ZA555123\",\n      \"isUser\": true\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/bookings",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"]
+            }
+          }
+        },
+        {
+          "name": "Get Booking by ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "{{booking_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Get My Bookings",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/bookings?userId={{user_id}}&page=1&limit=10",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings"],
+              "query": [
+                { "key": "userId", "value": "{{user_id}}" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "10" }
               ]
             }
           }
         },
         {
-          "name": "Update Booking",
+          "name": "Update Booking Status",
           "request": {
             "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"status\": \"confirmed\",\n  \"specialRequests\": \"Updated request\"\n}"
+              "raw": "{\n  \"status\": \"confirmed\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/bookings/:bookingId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "bookings",
-                ":bookingId"
-              ],
-              "variable": [
-                {
-                  "key": "bookingId",
-                  "value": "booking-123"
-                }
-              ]
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}/status",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "{{booking_id}}", "status"]
             }
           }
         },
@@ -1002,466 +591,139 @@
           "name": "Cancel Booking",
           "request": {
             "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Change of travel plans\"\n}"
+            },
             "url": {
-              "raw": "{{base_url}}/api/bookings/:bookingId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "bookings",
-                ":bookingId"
-              ],
-              "variable": [
-                {
-                  "key": "bookingId",
-                  "value": "booking-123"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Booking Timeline",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/bookings/:bookingId/timeline",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "bookings",
-                ":bookingId",
-                "timeline"
-              ],
-              "variable": [
-                {
-                  "key": "bookingId",
-                  "value": "booking-123"
-                }
-              ]
+              "raw": "{{base_url}}/api/bookings/{{booking_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "bookings", "{{booking_id}}"]
             }
           }
         }
       ]
     },
     {
-      "name": "💳 Payments",
+      "name": "💳 Payments (Paystack)",
       "item": [
         {
-          "name": "Get Payment Methods",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
+          "name": "Initialize Paystack Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  pm.environment.set('paystack_reference', data.reference);",
+                  "  console.log('✅ Payment initialized. Reference: ' + data.reference);",
+                  "  console.log('Authorization URL: ' + data.authorizationUrl);",
+                  "} else {",
+                  "  console.log('❌ Payment init failed: ' + pm.response.text());",
+                  "}"
+                ]
               }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/payments/methods",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "methods"
-              ]
             }
-          }
-        },
-        {
-          "name": "Add Payment Method",
+          ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"type\": \"credit_card\",\n  \"cardNumber\": \"4111111111111111\",\n  \"expiryMonth\": 12,\n  \"expiryYear\": 2025,\n  \"cvv\": \"123\",\n  \"cardholderName\": \"John Doe\"\n}"
+              "raw": "{\n  \"bookingId\": \"{{booking_id}}\",\n  \"amount\": 5000.00,\n  \"userId\": \"{{user_id}}\",\n  \"email\": \"test@example.com\",\n  \"currency\": \"KES\",\n  \"description\": \"Charter booking payment\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/payments/methods",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "methods"
-              ]
+              "raw": "{{base_url}}/api/payments/paystack/initialize",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "paystack", "initialize"]
             }
           }
         },
         {
-          "name": "Process Payment",
+          "name": "Verify Paystack Payment",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "  var json = pm.response.json();",
+                  "  var data = json.data || json;",
+                  "  console.log('✅ Payment verification status: ' + data.status);",
+                  "  console.log('Amount paid: ' + data.amount);",
+                  "} else {",
+                  "  console.log('❌ Verify failed: ' + pm.response.text());",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/payments/paystack/verify/{{paystack_reference}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "paystack", "verify", "{{paystack_reference}}"]
+            }
+          }
+        },
+        {
+          "name": "Initialize Payment (Legacy)",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"bookingId\": \"booking-123\",\n  \"paymentMethodId\": \"method-456\",\n  \"amount\": 5000,\n  \"currency\": \"USD\",\n  \"description\": \"Charter booking payment\"\n}"
+              "raw": "{\n  \"bookingId\": \"{{booking_id}}\",\n  \"amount\": 5000.00,\n  \"userId\": \"{{user_id}}\",\n  \"email\": \"test@example.com\",\n  \"currency\": \"KES\"\n}"
             },
             "url": {
-              "raw": "{{base_url}}/api/payments/process",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "process"
-              ]
+              "raw": "{{base_url}}/api/payments/initialize",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "initialize"]
             }
           }
         },
         {
-          "name": "Get Payment History",
+          "name": "Verify Payment (Legacy)",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/payments/history?page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "history"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
-              ]
+              "raw": "{{base_url}}/api/payments/verify/{{paystack_reference}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "verify", "{{paystack_reference}}"]
             }
           }
         },
         {
-          "name": "Get Payment Details",
+          "name": "Get Payment by ID",
           "request": {
             "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
+            "header": [],
             "url": {
-              "raw": "{{base_url}}/api/payments/:paymentId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                ":paymentId"
-              ],
-              "variable": [
-                {
-                  "key": "paymentId",
-                  "value": "payment-123"
-                }
-              ]
+              "raw": "{{base_url}}/api/payments/{{payment_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "{{payment_id}}"]
             }
           }
         },
         {
-          "name": "Refund Payment",
+          "name": "Process Refund",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"paymentId\": \"payment-123\",\n  \"reason\": \"Booking cancelled\",\n  \"refundAmount\": 5000\n}"
+              "raw": "{\n  \"paymentId\": \"{{payment_id}}\",\n  \"reason\": \"Customer requested cancellation\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/payments/refund",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "payments",
-                "refund"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "💰 Wallet",
-      "item": [
-        {
-          "name": "Get Wallet Balance",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/wallet/balance",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "wallet",
-                "balance"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Add Funds to Wallet",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"amount\": 1000,\n  \"currency\": \"USD\",\n  \"paymentMethodId\": \"method-456\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/wallet/add-funds",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "wallet",
-                "add-funds"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Wallet Transactions",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/wallet/transactions?page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "wallet",
-                "transactions"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "🛂 Passengers",
-      "item": [
-        {
-          "name": "Get All Passengers",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/passengers?page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "passengers"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Passenger Details",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/passengers/:passengerId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "passengers",
-                ":passengerId"
-              ],
-              "variable": [
-                {
-                  "key": "passengerId",
-                  "value": "passenger-123"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Add Passenger",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"dateOfBirth\": \"1990-05-15\",\n  \"passport\": \"ABC123456\",\n  \"nationality\": \"US\",\n  \"email\": \"jane@example.com\",\n  \"phone\": \"+1234567890\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/passengers",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "passengers"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Update Passenger",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"firstName\": \"Jane\",\n  \"lastName\": \"Smith\",\n  \"phone\": \"+9876543210\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/passengers/:passengerId",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "passengers",
-                ":passengerId"
-              ],
-              "variable": [
-                {
-                  "key": "passengerId",
-                  "value": "passenger-123"
-                }
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "payments", "refund"]
             }
           }
         }
@@ -1476,276 +738,26 @@
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/locations/search?query=miami&type=airport",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "locations",
-                "search"
-              ],
-              "query": [
-                {
-                  "key": "query",
-                  "value": "miami"
-                },
-                {
-                  "key": "type",
-                  "value": "airport"
-                }
-              ]
+              "raw": "{{base_url}}/api/locations/search?query=Nairobi",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations", "search"],
+              "query": [{ "key": "query", "value": "Nairobi" }]
             }
           }
         },
         {
-          "name": "Geocode Address",
+          "name": "Get Airports",
           "request": {
             "method": "GET",
             "header": [],
             "url": {
-              "raw": "{{base_url}}/api/locations/geocode?address=123 Main St, Miami, FL",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "locations",
-                "geocode"
-              ],
+              "raw": "{{base_url}}/api/locations?type=airport&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["api", "locations"],
               "query": [
-                {
-                  "key": "address",
-                  "value": "123 Main St, Miami, FL"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Get Nearby Airports",
-          "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/locations/airports?latitude=25.7617&longitude=-80.1918&radius=50",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "locations",
-                "airports"
-              ],
-              "query": [
-                {
-                  "key": "latitude",
-                  "value": "25.7617"
-                },
-                {
-                  "key": "longitude",
-                  "value": "-80.1918"
-                },
-                {
-                  "key": "radius",
-                  "value": "50"
-                }
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "🔔 Notifications & Communication",
-      "item": [
-        {
-          "name": "Get Notifications",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/notifications?page=1&limit=20",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "notifications"
-              ],
-              "query": [
-                {
-                  "key": "page",
-                  "value": "1"
-                },
-                {
-                  "key": "limit",
-                  "value": "20"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Mark Notification as Read",
-          "request": {
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              }
-            ],
-            "url": {
-              "raw": "{{base_url}}/api/notifications/:notificationId/read",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "notifications",
-                ":notificationId",
-                "read"
-              ],
-              "variable": [
-                {
-                  "key": "notificationId",
-                  "value": "notif-123"
-                }
-              ]
-            }
-          }
-        },
-        {
-          "name": "Send Email",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"to\": \"recipient@example.com\",\n  \"subject\": \"Booking Confirmation\",\n  \"body\": \"Your booking has been confirmed\",\n  \"templateId\": \"booking-confirmation\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/communications/email",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "communications",
-                "email"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Send SMS",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"phone\": \"+1234567890\",\n  \"message\": \"Your booking confirmation code is 123456\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/communications/sms",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "communications",
-                "sms"
-              ]
-            }
-          }
-        }
-      ]
-    },
-    {
-      "name": "📱 Devices",
-      "item": [
-        {
-          "name": "Register Device",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"deviceToken\": \"ExponentPushToken[xxxxxx]\",\n  \"platform\": \"ios\",\n  \"deviceModel\": \"iPhone 12\",\n  \"osVersion\": \"14.5\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/devices/register",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "devices",
-                "register"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Send Push Notification",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{access_token}}"
-              },
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"userId\": \"user-123\",\n  \"title\": \"Booking Reminder\",\n  \"body\": \"Your charter departs in 2 hours\",\n  \"data\": {\"bookingId\": \"booking-123\"}\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/notifications/push",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "notifications",
-                "push"
+                { "key": "type", "value": "airport" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
               ]
             }
           }
@@ -1758,72 +770,52 @@
         {
           "name": "API Gateway Health",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/health",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "health"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "health"]
             }
           }
         },
         {
           "name": "All Services Health",
           "request": {
+            "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/health/all",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "health",
-                "all"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "health", "all"]
             }
           }
         },
         {
-          "name": "Single Service Health",
+          "name": "Health Dashboard (HTML)",
           "request": {
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/api/health/service/user-service",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "health",
-                "service",
-                "user-service"
-              ]
-            }
-          }
-        },
-        {
-          "name": "Health Dashboard",
-          "request": {
+            "auth": { "type": "noauth" },
             "method": "GET",
             "header": [],
             "url": {
               "raw": "{{base_url}}/api/health/dashboard",
-              "host": [
-                "{{base_url}}"
-              ],
-              "path": [
-                "api",
-                "health",
-                "dashboard"
-              ]
+              "host": ["{{base_url}}"],
+              "path": ["api", "health", "dashboard"]
+            }
+          }
+        },
+        {
+          "name": "Swagger Docs",
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/api/docs",
+              "host": ["{{base_url}}"],
+              "path": ["api", "docs"]
             }
           }
         }
@@ -1843,6 +835,46 @@
     },
     {
       "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "user_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "booking_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "deal_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "aircraft_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "experience_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "yacht_id",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "paystack_reference",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "payment_id",
       "value": "",
       "type": "string"
     }
