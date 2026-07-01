@@ -74,6 +74,33 @@ export class OneSignalController {
   }
 
   /**
+   * Push notification when admin prices an inquiry — user opens app to pay
+   */
+  @EventPattern('booking.quoted')
+  async handleBookingQuoted(@Payload() data: {
+    userId: string;
+    referenceNumber: string;
+    totalPrice: number;
+    origin?: string;
+    destination?: string;
+  }) {
+    try {
+      await this.oneSignalService.sendToUser({
+        userId: data.userId,
+        title: 'Your Charter Quote is Ready 🎉',
+        message: `${data.origin} → ${data.destination} | $${Number(data.totalPrice).toLocaleString()} — tap to pay and confirm.`,
+        data: {
+          type: 'booking_quoted',
+          referenceNumber: data.referenceNumber,
+          deepLink: 'aircharters://trips/pending',
+        },
+      });
+    } catch (error) {
+      this.logger.error(`Failed to send quote push notification: ${getErrorMessage(error)}`);
+    }
+  }
+
+  /**
    * Send test notification
    */
   @MessagePattern({ cmd: 'send_test_notification' })

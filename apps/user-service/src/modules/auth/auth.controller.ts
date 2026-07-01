@@ -27,6 +27,11 @@ export class AuthController {
     return this.authService.loginWithBiometric(data.biometricId, data.userId, data.userEmail);
   }
 
+  @MessagePattern({ cmd: 'change_password' })
+  async changePassword(@Payload() data: { userId: string; currentPassword: string; newPassword: string }) {
+    return this.authService.changePassword(data.userId, data.currentPassword, data.newPassword);
+  }
+
   @MessagePattern({ cmd: 'refresh_token' })
   async refreshToken(@Payload() data: { refreshToken: string }) {
     return this.authService.refreshToken(data.refreshToken);

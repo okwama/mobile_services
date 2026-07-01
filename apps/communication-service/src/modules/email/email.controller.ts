@@ -20,6 +20,12 @@ export class EmailController {
     });
   }
 
+  @EventPattern('booking.quoted')
+  async handleBookingQuoted(@Payload() data: any) {
+    // Email the customer — their quote is ready and they can now pay
+    await this.emailService.sendQuoteNotificationEmail(data);
+  }
+
   @EventPattern(COMMUNICATION_EVENTS.BOOKING_CONFIRMED)
   async handleBookingConfirmed(@Payload() data: any) {
     await this.emailService.sendBookingConfirmation(data);

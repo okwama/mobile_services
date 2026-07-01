@@ -26,6 +26,11 @@ export class BookingsController {
     return this.bookingsService.updateStatus(data.id, data.status);
   }
 
+  @MessagePattern({ cmd: 'set_inquiry_quote' })
+  async setInquiryQuote(@Payload() data: { id: number; totalPrice: number; adminNotes?: string }) {
+    return this.bookingsService.setInquiryQuote(data.id, data.totalPrice, data.adminNotes);
+  }
+
   @MessagePattern({ cmd: 'cancel_booking' })
   async cancelBooking(@Payload() data: { id: number; reason?: string }) {
     return this.bookingsService.cancelBooking(data.id, data.reason);

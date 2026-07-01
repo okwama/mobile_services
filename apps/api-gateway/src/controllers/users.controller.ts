@@ -1,6 +1,6 @@
-import { Controller, Get, Put, Delete, Body, Param, Query, Inject, UseGuards, Headers } from '@nestjs/common';
+import { Controller, Get, Put, Delete, Body, Param, Query, Inject, Headers } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
 import { USER_SERVICE_PATTERNS } from '@app/common';
 
@@ -11,28 +11,57 @@ export class UsersController {
     @Inject('USER_SERVICE') private readonly userService: ClientProxy,
   ) {}
 
+  private extractUserId(auth?: string): string {
+    if (!auth) return '';
+    try {
+      const token = auth.replace(/^Bearer\s+/i, '').trim();
+      const parts = token.split('.');
+      if (parts.length >= 2) {
+        const payload = JSON.parse(Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
+        return payload?.sub || '';
+      }
+    } catch { }
+    return '';
+  }
+
   @Get('profile')
   @ApiOperation({ summary: 'Get user profile' })
   async getProfile(@Query('userId') userId: string, @Headers('authorization') auth?: string) {
-    // If caller didn't provide a userId, attempt to derive it from JWT in the
-    // Authorization header (common pattern for "me" endpoints).
     if (!userId && auth) {
-      try {
-        const token = auth.replace(/^Bearer\s+/i, '').trim();
-        const parts = token.split('.');
-        if (parts.length >= 2) {
-          const payload = JSON.parse(Buffer.from(parts[1].replace(/-/g, '+').replace(/_/g, '/'), 'base64').toString('utf8'));
-          if (payload && payload.sub) {
-            userId = payload.sub;
-          }
-        }
-      } catch (e) {
-        // ignore decode errors; downstream will handle missing userId
-      }
+      userId = this.extractUserId(auth);
     }
-
     return firstValueFrom(
       this.userService.send(USER_SERVICE_PATTERNS.GET_USER_PROFILE, { userId }),
+    );
+  }
+
+  @Put('profile')
+  @ApiOperation({ summary: 'Update authenticated user profile' })
+  async updateProfile(@Body() body: any, @Headers('authorization') auth?: string) {
+    const userId = this.extractUserId(auth);
+    return firstValueFrom(
+      this.userService.send({ cmd: 'update_profile' }, { userId, ...body }),
+    );
+  }
+
+  @Put('preferences')
+  @ApiOperation({ summary: 'Update user app preferences (language, currency, timezone, theme, notifications)' })
+  async updatePreferences(@Body() body: any, @Headers('authorization') auth?: string) {
+    const userId = this.extractUserId(auth);
+    return firstValueFrom(
+      this.userService.send({ cmd: 'update_preferences' }, { userId, ...body }),
+    );
+  }
+
+  @Put('password')
+  @ApiOperation({ summary: 'Change authenticated user password' })
+  async changePassword(
+    @Body() body: { currentPassword: string; newPassword: string },
+    @Headers('authorization') auth?: string,
+  ) {
+    const userId = this.extractUserId(auth);
+    return firstValueFrom(
+      this.userService.send({ cmd: 'change_password' }, { userId, ...body }),
     );
   }
 
@@ -45,7 +74,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  @ApiOperation({ summary: 'Update user' })
+  @ApiOperation({ summary: 'Update user (admin)' })
   async updateUser(@Param('id') id: string, @Body() updates: any) {
     return firstValueFrom(
       this.userService.send(USER_SERVICE_PATTERNS.UPDATE_USER, { userId: id, updates }),

@@ -31,5 +31,17 @@ export class UsersController {
   async deleteUser(@Payload() data: { userId: string }) {
     return this.usersService.delete(data.userId);
   }
+
+  @MessagePattern({ cmd: 'update_profile' })
+  async updateProfile(@Payload() data: { userId: string; [key: string]: any }) {
+    const { userId, ...fields } = data;
+    return this.usersService.updateProfile(userId, fields);
+  }
+
+  @MessagePattern({ cmd: 'update_preferences' })
+  async updatePreferences(@Payload() data: { userId: string; [key: string]: any }) {
+    const { userId, ...fields } = data;
+    return this.usersService.updatePreferences(userId, fields);
+  }
 }
 

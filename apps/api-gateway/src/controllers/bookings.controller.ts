@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Body, Param, Query, Inject, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Put, Patch, Delete, Body, Param, Query, Inject, Req, UseGuards } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 import { firstValueFrom } from 'rxjs';
@@ -73,6 +73,21 @@ export class BookingsController {
   async cancelBooking(@Param('id') id: number, @Body() body: { reason?: string }) {
     return firstValueFrom(
       this.bookingService.send({ cmd: 'cancel_booking' }, { id, reason: body.reason }),
+    );
+  }
+
+  @Patch(':id/quote')
+  @ApiOperation({ summary: 'Admin: set price on a pending inquiry (moves status to priced)' })
+  async setInquiryQuote(
+    @Param('id') id: number,
+    @Body() body: { totalPrice: number; adminNotes?: string },
+  ) {
+    return firstValueFrom(
+      this.bookingService.send({ cmd: 'set_inquiry_quote' }, {
+        id,
+        totalPrice: body.totalPrice,
+        adminNotes: body.adminNotes,
+      }),
     );
   }
 }

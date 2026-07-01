@@ -128,6 +128,80 @@ export class UsersService {
     return sanitized;
   }
 
+  async updateProfile(userId: string, fields: Record<string, any>) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Map camelCase from Flutter to snake_case DB columns
+    const map: Record<string, string> = {
+      firstName: 'first_name',
+      lastName: 'last_name',
+      phone: 'phone_number',
+      phoneNumber: 'phone_number',
+      countryCode: 'country_code',
+      dateOfBirth: 'date_of_birth',
+      profileImageUrl: 'profile_image_url',
+      nationality: 'nationality',
+    };
+
+    for (const [key, value] of Object.entries(fields)) {
+      if (value === undefined || value === null) continue;
+      const col = map[key] ?? key;
+      if (col in user) (user as any)[col] = value;
+    }
+
+    await this.userRepository.save(user);
+    const { password, ...sanitized } = user;
+    return { success: true, data: sanitized };
+  }
+
+  async updatePreferences(userId: string, fields: Record<string, any>) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    // Preference fields that live on the User entity
+    const userFields = ['language', 'currency', 'timezone'];
+    for (const f of userFields) {
+      if (fields[f] !== undefined) (user as any)[f] = fields[f];
+    }
+    if (fields.darkMode !== undefined) {
+      (user as any)['theme'] = fields.darkMode ? 'dark' : 'light';
+    }
+    if (fields.theme !== undefined) {
+      (user as any)['theme'] = fields.theme;
+    }
+
+    await this.userRepository.save(user);
+
+    // Notification + privacy flags live on UserProfile
+    const profileFields: Record<string, string> = {
+      emailNotifications: 'email_notifications',
+      smsNotifications: 'sms_notifications',
+      pushNotifications: 'push_notifications',
+      marketingEmails: 'marketing_emails',
+      locationServices: 'location_tracking',
+      analyticsEnabled: 'data_sharing',
+    };
+
+    const profileUpdates: Record<string, any> = {};
+    for (const [key, col] of Object.entries(profileFields)) {
+      if (fields[key] !== undefined) profileUpdates[col] = fields[key];
+    }
+
+    if (Object.keys(profileUpdates).length > 0) {
+      let profile = await this.profileRepository.findOne({ where: { userId } });
+      if (!profile) {
+        await this.profileRepository.insert({ userId });
+        profile = await this.profileRepository.findOne({ where: { userId } });
+      }
+      Object.assign(profile, profileUpdates);
+      await this.profileRepository.save(profile);
+    }
+
+    const { password, ...sanitized } = user;
+    return { success: true, data: sanitized };
+  }
+
   async findAll(page: number = 1, limit: number = 10) {
     const [users, total] = await this.userRepository.findAndCount({
       skip: (page - 1) * limit,

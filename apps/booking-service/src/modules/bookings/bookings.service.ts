@@ -226,11 +226,14 @@ export class BookingsService {
       }
 
       // Step 5: Initialize payment (async - don't block)
-      this.paymentService.emit('payment.initialize', {
-        bookingId: savedBooking.id,
-        amount: savedBooking.totalPrice,
-        userId: dto.userId,
-      });
+      // Skip for inquiries (totalPrice = 0) — payment is initialized after admin sets a quote price
+      if (savedBooking.totalPrice && Number(savedBooking.totalPrice) > 0) {
+        this.paymentService.emit('payment.initialize', {
+          bookingId: savedBooking.id,
+          amount: savedBooking.totalPrice,
+          userId: dto.userId,
+        });
+      }
 
       // Step 6: Fetch aircraft and company details for notifications
       let aircraftDetails: any = null;
@@ -359,6 +362,60 @@ export class BookingsService {
       booking.bookingStatus = BookingStatus.CONFIRMED;
     }
     return this.bookingRepository.save(booking);
+  }
+
+  async setInquiryQuote(id: number, totalPrice: number, adminNotes?: string) {
+    const booking = await this.findOne(id);
+
+    if (booking.bookingStatus !== BookingStatus.PENDING) {
+      throw new BadRequestException(`Booking ${id} is not in pending/inquiry state`);
+    }
+
+    booking.totalPrice = totalPrice;
+    booking.bookingStatus = BookingStatus.PRICED;
+    if (adminNotes) booking.adminNotes = adminNotes;
+
+    const updated = await this.bookingRepository.save(booking);
+
+    // Fetch user details so the comms service can email/push the customer directly
+    let customerEmail = '';
+    let customerName = 'Customer';
+    try {
+      const user = await firstValueFrom(
+        this.userService.send({ cmd: 'validate_user' }, { userId: updated.userId })
+      );
+      if (user) {
+        customerEmail = user.email || '';
+        customerName = user.firstName && user.lastName
+          ? `${user.firstName} ${user.lastName}`
+          : (user.firstName || 'Customer');
+      }
+    } catch {
+      // Non-fatal — notification degrades gracefully
+    }
+
+    // Notify the user their quote is ready
+    this.commsService.emit('booking.quoted', {
+      bookingId: updated.id,
+      referenceNumber: updated.referenceNumber,
+      userId: updated.userId,
+      customerEmail,
+      customerName,
+      totalPrice,
+      origin: updated.originName,
+      destination: updated.destinationName,
+      departureDate: updated.departureDateTime,
+      adminNotes,
+    });
+
+    // Now initialize payment since we have a real price
+    this.paymentService.emit('payment.initialize', {
+      bookingId: updated.id,
+      amount: totalPrice,
+      userId: updated.userId,
+    });
+
+    return { success: true, data: updated };
   }
 
   async cancelBooking(id: number, reason?: string) {

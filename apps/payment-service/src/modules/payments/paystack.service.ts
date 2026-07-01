@@ -29,6 +29,7 @@ export class PaystackService {
     userId: string;
     companyId: number;
     subaccountCode?: string;
+    channels?: string[];
     metadata?: any;
   }) {
     try {
@@ -47,6 +48,10 @@ export class PaystackService {
           ...data.metadata,
         },
       };
+
+      if (data.channels && data.channels.length > 0) {
+        transactionData.channels = data.channels;
+      }
 
       // Add subaccount if provided (for automatic splits)
       if (data.subaccountCode) {

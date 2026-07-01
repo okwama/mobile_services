@@ -31,6 +31,19 @@ export class PaymentsService {
   /**
    * Initialize payment with Paystack (Simplified - No Commission)
    */
+  private mapPreferredMethodToChannels(preferredPaymentMethod?: string): string[] | undefined {
+    switch (preferredPaymentMethod) {
+      case 'card': return ['card'];
+      case 'mpesa':
+      case 'mobile_money': return ['mobile_money'];
+      case 'bank_transfer': return ['bank_transfer'];
+      case 'ussd': return ['ussd'];
+      case 'bank': return ['bank'];
+      case 'eft': return ['eft'];
+      default: return undefined; // Paystack shows all enabled channels
+    }
+  }
+
   async initializePayment(data: {
     bookingId: string;
     amount: number;
@@ -38,22 +51,14 @@ export class PaymentsService {
     companyId: number;
     email: string;
     currency?: string;
+    preferredPaymentMethod?: string;
   }) {
     try {
       this.logger.log(`Initializing payment for booking: ${data.bookingId}`);
 
-      // Get company's Paystack subaccount (if exists)
-      const subaccount = await this.accountRepository.findOne({
-        where: {
-          companyId: data.companyId,
-          paymentProvider: PaymentProvider.PAYSTACK,
-          accountStatus: AccountStatus.ACTIVE,
-        },
-      });
-
-      // Initialize Paystack payment - FULL AMOUNT goes to company
-      // Enforce merchant-supported currency (from company account or default KES)
-      const enforcedCurrency = (subaccount?.currency || data.currency || 'KES').toUpperCase();
+      // All payments settle to the platform's main Paystack account.
+      // Per-company subaccount splits are disabled until payout logic is ready.
+      const enforcedCurrency = (data.currency || 'KES').toUpperCase();
       const paystackResponse = await this.paystackService.initializeTransaction({
         amount: data.amount,
         email: data.email,
@@ -61,7 +66,7 @@ export class PaymentsService {
         bookingId: data.bookingId,
         userId: data.userId,
         companyId: data.companyId,
-        subaccountCode: subaccount?.paystackSubaccountId,
+        channels: this.mapPreferredMethodToChannels(data.preferredPaymentMethod),
         metadata: {
           bookingId: data.bookingId,
           userId: data.userId,

@@ -181,6 +181,27 @@ export class AuthService {
     };
   }
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    if (!userId || !currentPassword || !newPassword) {
+      throw new BadRequestException('userId, currentPassword and newPassword are required');
+    }
+
+    if (newPassword.length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters');
+    }
+
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new UnauthorizedException('User not found');
+
+    const match = await bcrypt.compare(currentPassword, user.password);
+    if (!match) throw new UnauthorizedException('Current password is incorrect');
+
+    user.password = await bcrypt.hash(newPassword, 8);
+    await this.userRepository.save(user);
+
+    return { success: true, message: 'Password changed successfully' };
+  }
+
   async loginWithBiometric(biometricId: string, userId: string, userEmail: string) {
     // Validate biometric authentication data
     if (!biometricId || !userId || !userEmail) {

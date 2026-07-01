@@ -59,6 +59,56 @@ export class EmailService {
     return { success: result.success };
   }
 
+  async sendQuoteNotificationEmail(data: any): Promise<{ success: boolean }> {
+    const { customerEmail, customerName, referenceNumber, totalPrice, origin, destination, departureDate, adminNotes } = data;
+
+    if (!customerEmail) {
+      this.logger.warn(`No customer email for quote notification on booking ${data.bookingId}`);
+      return { success: false };
+    }
+
+    const subject = `Your Charter Quote is Ready – ${referenceNumber}`;
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: #FF6700; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+          .body { background: #fafafa; padding: 24px; border-radius: 0 0 8px 8px; }
+          table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+          td { padding: 10px 0; border-bottom: 1px solid #eee; }
+          .price { font-size: 28px; font-weight: bold; color: #FF6700; text-align: center; margin: 20px 0; }
+          .cta { display: inline-block; background: #FF6700; color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; }
+        </style>
+      </head>
+      <body>
+        <div class="header"><h1>Your Quote is Ready!</h1></div>
+        <div class="body">
+          <p>Hi ${customerName},</p>
+          <p>Great news — your charter inquiry has been reviewed and a quote has been prepared for you.</p>
+          <div class="price">$${Number(totalPrice).toLocaleString('en-US', { minimumFractionDigits: 2 })}</div>
+          <table>
+            <tr><td><strong>Reference:</strong></td><td>${referenceNumber}</td></tr>
+            <tr><td><strong>From:</strong></td><td>${origin || 'N/A'}</td></tr>
+            <tr><td><strong>To:</strong></td><td>${destination || 'N/A'}</td></tr>
+            <tr><td><strong>Departure:</strong></td><td>${departureDate ? new Date(departureDate).toLocaleString() : 'N/A'}</td></tr>
+            ${adminNotes ? `<tr><td><strong>Note:</strong></td><td>${adminNotes}</td></tr>` : ''}
+          </table>
+          <p>Open the Air Charters app, go to <strong>My Trips → Pending</strong>, and tap <strong>Proceed to Pay</strong> to confirm your booking.</p>
+          <p style="color: #999; font-size: 12px; margin-top: 30px;">This quote is subject to availability. Air Charters.</p>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const result = await this.sendEmailWithFallback(customerEmail, subject, html);
+    if (result.success) {
+      this.logger.log(`Quote notification sent to customer: ${customerEmail} for ${referenceNumber}`);
+    }
+    return { success: result.success };
+  }
+
   async sendBookingInquiryEmail(data: any): Promise<{ success: boolean }> {
     const { companyEmail, bookingId, referenceNumber, customerName, customerEmail, aircraftName, experienceTitle, bookingType, origin, destination, departureDate, passengerCount } = data;
     
