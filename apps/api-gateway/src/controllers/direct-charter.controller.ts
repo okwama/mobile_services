@@ -31,5 +31,13 @@ export class DirectCharterController {
       ),
     );
   }
+
+  @Get('medivac-aircraft')
+  @ApiOperation({ summary: 'Get all medivac-capable aircraft' })
+  async getMedivacAircraft() {
+    return firstValueFrom(
+      this.directCharterService.send({ cmd: 'get_medivac_aircraft' }, {}),
+    );
+  }
 }
 

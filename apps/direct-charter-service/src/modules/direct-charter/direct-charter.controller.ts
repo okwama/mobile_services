@@ -49,5 +49,10 @@ export class DirectCharterController {
   async getCompanyDetails(@Payload() data: { companyId: number }) {
     return this.directCharterService.getCompanyDetails(data.companyId);
   }
+
+  @MessagePattern({ cmd: 'get_medivac_aircraft' })
+  async getMedivacAircraft() {
+    return this.directCharterService.getMedivacAircraft();
+  }
 }
 

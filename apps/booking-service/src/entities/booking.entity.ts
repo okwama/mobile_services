@@ -30,6 +30,7 @@ export enum BookingType {
   DEAL = 'deal',
   EXPERIENCE = 'experience',
   YACHT = 'yacht',
+  MEDIVAC = 'medivac',
 }
 
 @Entity('charter_bookings')

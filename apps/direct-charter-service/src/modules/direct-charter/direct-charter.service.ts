@@ -154,6 +154,51 @@ export class DirectCharterService {
     };
   }
 
+  async getMedivacAircraft() {
+    const aircraft = await this.aircraftRepository
+      .createQueryBuilder('aircraft')
+      .where('aircraft.isAvailable = :isAvailable', { isAvailable: true })
+      .andWhere('aircraft.maintenanceStatus = :status', { status: 'operational' })
+      .andWhere('aircraft.serviceType = :serviceType', { serviceType: 'medical' })
+      .getMany();
+
+    const aircraftWithImages = await Promise.all(
+      aircraft.map(async (ac) => {
+        const images = await this.aircraftImageRepository.find({
+          where: { aircraftId: ac.id },
+          select: ['url', 'category'],
+        });
+
+        const company = await this.aircraftRepository.manager.query(
+          `SELECT id, companyName, mobileNumber FROM charters_companies WHERE id = ?`,
+          [ac.companyId],
+        );
+
+        return {
+          id: ac.id,
+          name: ac.name,
+          model: ac.model || 'N/A',
+          type: ac.type,
+          capacity: ac.capacity,
+          pricePerHour: ac.pricePerHour,
+          baseAirport: ac.baseAirport || '',
+          baseCity: ac.baseCity || '',
+          companyId: ac.companyId,
+          companyName: company?.[0]?.companyName || null,
+          companyPhone: company?.[0]?.mobileNumber || null,
+          serviceType: ac.serviceType,
+          images: images.map((img) => img.url),
+        };
+      }),
+    );
+
+    return {
+      success: true,
+      data: aircraftWithImages,
+      total: aircraftWithImages.length,
+    };
+  }
+
   async getCompanyDetails(companyId: number) {
     // Since we don't have direct access to the charters_companies table in this service,
     // we'll need to query it via raw SQL or return a placeholder
