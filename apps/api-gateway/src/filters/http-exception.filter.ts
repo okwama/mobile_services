@@ -36,10 +36,33 @@ export class AllExceptionsFilter implements ExceptionFilter {
         message = exceptionResponse as string;
       }
     } 
-    // Handle standard JavaScript errors
+    // Handle standard JavaScript errors (including serialized microservice errors)
     else if (exception instanceof Error) {
-      message = exception.message || 'An error occurred';
-      status = HttpStatus.BAD_REQUEST;
+      // NestJS TCP transport serializes microservice exceptions as JSON strings.
+      // Try to extract the original statusCode/message before falling back to 500.
+      try {
+        const parsed = JSON.parse(exception.message);
+        if (parsed && typeof parsed === 'object') {
+          status = parsed.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR;
+          const raw = parsed.message;
+          message = Array.isArray(raw) ? raw.join(', ') : (raw || exception.message);
+          errors = parsed.error ?? null;
+        } else {
+          status = HttpStatus.INTERNAL_SERVER_ERROR;
+          message = exception.message || 'An error occurred';
+        }
+      } catch {
+        status = HttpStatus.INTERNAL_SERVER_ERROR;
+        message = exception.message || 'An error occurred';
+      }
+    }
+    // Handle plain objects thrown by microservices (non-Error error values)
+    else if (exception && typeof exception === 'object') {
+      const err = exception as any;
+      status = err.statusCode ?? HttpStatus.INTERNAL_SERVER_ERROR;
+      const raw = err.message;
+      message = Array.isArray(raw) ? raw.join(', ') : (raw || 'An error occurred');
+      errors = err.error ?? null;
     }
 
     const errorResponse = {
