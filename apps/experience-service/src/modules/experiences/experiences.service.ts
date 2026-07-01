@@ -105,10 +105,10 @@ export class ExperiencesService {
         city: exp.city,
         locationName: exp.locationName,
         imageUrl: exp.images?.[0]?.url || null,
-        location: `${exp.city}, ${exp.country}`,
-        duration: `${exp.durationMinutes} minutes`,
-        price: parseFloat(exp.total.toString()),
-      total: parseFloat(exp.total.toString()),
+        location: `${exp.city ?? ''}, ${exp.country ?? ''}`.replace(/^,\s*|,\s*$/g, '') || null,
+        duration: exp.durationMinutes != null ? `${exp.durationMinutes} minutes` : null,
+        price: exp.total != null ? parseFloat(exp.total.toString()) : 0,
+      total: exp.total != null ? parseFloat(exp.total.toString()) : 0,
       rating: 4.5,
         durationMinutes: exp.durationMinutes,
         taxType: exp.taxType,
@@ -121,6 +121,22 @@ export class ExperiencesService {
         createdAt: exp.createdAt,
         updatedAt: exp.updatedAt,
     }));
+  }
+
+  private groupByCategory(experiences: ExperienceTemplate[]) {
+    const grouped = new Map<string, { title: string; key: string; total: number; deals: any[] }>();
+
+    for (const exp of experiences) {
+      const key = (exp.category as string) || 'Other';
+      if (!grouped.has(key)) {
+        grouped.set(key, { title: this.formatCategoryName(key), key, total: 0, deals: [] });
+      }
+      const group = grouped.get(key)!;
+      group.deals.push(...this.mapTemplatesToDeals([exp]));
+      group.total = group.deals.length;
+    }
+
+    return Array.from(grouped.values());
   }
 
   /**
@@ -229,9 +245,9 @@ export class ExperiencesService {
     }
 
     const experiences = await query.getMany();
-    
+
     // Group filtered experiences by category
-    const grouped = this.groupByCategory(experiences);
+    const grouped = this.groupByCategory(experiences as ExperienceTemplate[]);
     
     return {
       categories: grouped,
